@@ -4,12 +4,12 @@
 	</PropertyGroup>
 
 	<ItemGroup Label="External Packages">
-		<PackageVersion Include="Avalonia" Version="12.1.2" />
-		<PackageVersion Include="Avalonia.Desktop" Version="12.1.2" />
-		<PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.2" />
-		<PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.2" />
+		<PackageVersion Include="Avalonia" Version="12.1.4" />
+		<PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
+		<PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+		<PackageVersion Include="Avalonia.Fonts.Inter" Version="12.1.4" />
 		<PackageVersion Include="Avalonia.Diagnostics" Version="11.3.22" />
 		<PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-		<PackageVersion Include="SonarAnalyzer.CSharp" Version="10.34.0.3385" />
+		<PackageVersion Include="SonarAnalyzer.CSharp" Version="10.35.0.4138" />
 	</ItemGroup>
 </Project>
