@@ -1,0 +1,35 @@
+<Window
+	xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:vm="using:Notewright.UI.ViewModels"
+	xmlns:shared="using:Notewright.UI.Views.Shared"
+	xmlns:player="using:Notewright.UI.Views.Player"
+	xmlns:settings="using:Notewright.UI.Views.Settings"
+	x:Class="Notewright.UI.Views.MainWindow"
+	x:DataType="vm:MainWindowViewModel"
+	Title="Notewright"
+	Width="900"
+	Height="680"
+	MinWidth="700"
+	MinHeight="500"
+	Icon="/Assets/icon.png"
+	Background="#1a1a1a"
+>
+	<Grid RowDefinitions="Auto,*,Auto">
+		<shared:TitleBarView Grid.Row="0" />
+
+		<TransitioningContentControl Grid.Row="1" Content="{Binding CurrentPage}">
+			<TransitioningContentControl.DataTemplates>
+				<DataTemplate DataType="vm:SheetViewModel">
+					<player:PlayerView DataContext="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext)}" />
+				</DataTemplate>
+
+				<DataTemplate DataType="vm:SettingsViewModel">
+					<settings:SettingsView />
+				</DataTemplate>
+			</TransitioningContentControl.DataTemplates>
+		</TransitioningContentControl>
+
+		<shared:StatusBarView Grid.Row="2" />
+	</Grid>
+</Window>

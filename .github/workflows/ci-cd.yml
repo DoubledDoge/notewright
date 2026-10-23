@@ -1,0 +1,51 @@
+name: .NET CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - '**/*.csproj'
+      - '**/*.slnx'
+      - '.github/workflows/ci-cd.yml'
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  DOTNET_VERSION: |
+    9.0.x
+    10.0.x
+
+jobs:
+  build:
+    name: Build and Format
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Install project tools
+        run: dotnet tool restore
+
+      - name: Check code formatting
+        run: dotnet csharpier check .
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore

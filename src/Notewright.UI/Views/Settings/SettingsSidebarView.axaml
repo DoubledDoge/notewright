@@ -1,0 +1,45 @@
+﻿<UserControl
+	xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:vm="using:Notewright.UI.ViewModels"
+	x:Class="Notewright.UI.Views.Settings.SettingsSidebarView"
+	x:DataType="vm:SettingsViewModel"
+>
+	<Border Background="#111111" BorderBrush="#2a2a2a" BorderThickness="0,0,1,0" Padding="16">
+		<StackPanel Spacing="16">
+			<TextBlock
+				Text="PREFERENCES"
+				Foreground="#444444"
+				FontSize="10"
+				FontWeight="SemiBold"
+				LetterSpacing="1"
+			/>
+
+			<Border
+				Background="#1e1e1e"
+				BorderBrush="#2a2a2a"
+				BorderThickness="1"
+				CornerRadius="6"
+				Padding="10,8"
+			>
+				<StackPanel Orientation="Horizontal" Spacing="8">
+					<TextBlock Text="⌨" Foreground="#4ade80" FontSize="14" VerticalAlignment="Center" />
+					<TextBlock
+						Text="Keyboard &amp; hotkeys"
+						Foreground="#cccccc"
+						FontSize="12"
+						VerticalAlignment="Center"
+					/>
+				</StackPanel>
+			</Border>
+
+			<TextBlock
+				Text="Your preferences apply to all sheets on this device."
+				Foreground="#444444"
+				FontSize="11"
+				TextWrapping="Wrap"
+				Margin="0,8,0,0"
+			/>
+		</StackPanel>
+	</Border>
+</UserControl>

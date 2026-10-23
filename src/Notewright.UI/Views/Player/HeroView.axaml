@@ -1,0 +1,46 @@
+﻿<UserControl
+	xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:vm="using:Notewright.UI.ViewModels"
+	x:Class="Notewright.UI.Views.Player.HeroView"
+	x:DataType="vm:SheetViewModel"
+>
+	<Border Padding="24,20" BorderBrush="#2a2a2a" BorderThickness="0,0,0,1">
+		<DockPanel>
+			<StackPanel
+				DockPanel.Dock="Right"
+				Orientation="Horizontal"
+				Spacing="8"
+				VerticalAlignment="Top"
+			>
+				<Button Command="{Binding ImportSheetCommand}" Classes="secondary">
+					<StackPanel Orientation="Horizontal" Spacing="6">
+						<TextBlock Text="↑" />
+						<TextBlock Text="Import text file" />
+					</StackPanel>
+				</Button>
+
+				<Button Command="{Binding ExportSheetCommand}" Classes="secondary">
+					<StackPanel Orientation="Horizontal" Spacing="6">
+						<TextBlock Text="↓" />
+						<TextBlock Text="Export text file" />
+					</StackPanel>
+				</Button>
+			</StackPanel>
+
+			<StackPanel DockPanel.Dock="Left" Spacing="4">
+				<TextBlock
+					Text="Your keys. Your music."
+					Foreground="#ffffff"
+					FontSize="22"
+					FontWeight="Bold"
+				/>
+				<TextBlock
+					Text="Paste a keyboard sheet, set the tempo, and bring it to life."
+					Foreground="#666666"
+					FontSize="13"
+				/>
+			</StackPanel>
+		</DockPanel>
+	</Border>
+</UserControl>

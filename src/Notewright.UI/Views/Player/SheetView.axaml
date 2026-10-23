@@ -1,0 +1,71 @@
+﻿<UserControl
+	xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:vm="using:Notewright.UI.ViewModels"
+	xmlns:player="using:Notewright.UI.Views.Player"
+	xmlns:converters="clr-namespace:Notewright.UI.Converters"
+	x:Class="Notewright.UI.Views.Player.SheetView"
+	x:DataType="vm:SheetViewModel"
+>
+	<Border
+		Margin="16"
+		Background="#141414"
+		BorderBrush="#2a2a2a"
+		BorderThickness="1"
+		CornerRadius="8"
+	>
+		<DockPanel>
+			<Border DockPanel.Dock="Top" Padding="12,8" BorderBrush="#2a2a2a" BorderThickness="0,0,0,1">
+				<DockPanel>
+					<StackPanel
+						DockPanel.Dock="Right"
+						Orientation="Horizontal"
+						Spacing="6"
+						VerticalAlignment="Center"
+					>
+						<Ellipse
+							Width="6"
+							Height="6"
+							Fill="{Binding ValidationStatus, Converter={x:Static converters:ValidationStatusConverters.ToStatusDotColor}}"
+						/>
+						<TextBlock
+							Text="{Binding ValidationStatus, Converter={x:Static converters:ValidationStatusConverters.ToStatusText}}"
+							Foreground="{Binding ValidationStatus, Converter={x:Static converters:ValidationStatusConverters.ToStatusColor}}"
+							FontSize="11"
+							VerticalAlignment="Center"
+						/>
+					</StackPanel>
+
+					<StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
+						<TextBlock
+							Text="{Binding FileName}"
+							Foreground="#cccccc"
+							FontSize="12"
+							FontWeight="SemiBold"
+							VerticalAlignment="Center"
+						/>
+						<Border Background="#2a2a2a" CornerRadius="3" Padding="4,2">
+							<TextBlock Text="EXAMPLE SHEET" Foreground="#666666" FontSize="10" />
+						</Border>
+					</StackPanel>
+				</DockPanel>
+			</Border>
+
+			<player:SyntaxLegendView DockPanel.Dock="Bottom" />
+
+			<TextBox
+				Text="{Binding SheetText, UpdateSourceTrigger=PropertyChanged}"
+				AcceptsReturn="true"
+				TextWrapping="Wrap"
+				PlaceholderText="Paste or import a sheet here..."
+				FontFamily="Courier New, Courier, monospace"
+				FontSize="13"
+				Background="Transparent"
+				BorderThickness="0"
+				Foreground="#cccccc"
+				CaretBrush="#4ade80"
+				Padding="12"
+			/>
+		</DockPanel>
+	</Border>
+</UserControl>

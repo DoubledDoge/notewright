@@ -1,0 +1,64 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup Label="Unique Configuration">
+		<OutputType>WinExe</OutputType>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+	</PropertyGroup>
+
+	<ItemGroup Label="Package Files">
+		<AvaloniaResource Include="Assets\**" Pack="true" PackagePath="/Assets" />
+	</ItemGroup>
+
+	<ItemGroup Label="Unique Dependency">
+		<PackageReference Include="Avalonia" />
+		<PackageReference Include="Avalonia.Desktop" />
+		<PackageReference Include="Avalonia.Themes.Fluent" />
+		<PackageReference Include="Avalonia.Fonts.Inter" />
+		<PackageReference Include="Avalonia.Diagnostics">
+			<IncludeAssets Condition="'$(Configuration)' == 'Release'">None</IncludeAssets>
+			<PrivateAssets Condition="'$(Configuration)' == 'Release'">All</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="CommunityToolkit.Mvvm" />
+		<ProjectReference Include="..\Notewright.Input\Notewright.Input.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Label="Avalonia Resources">
+		<Compile Update="Views\MainWindow.axaml.cs">
+			<DependentUpon>MainWindow.axaml</DependentUpon>
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="Views\Shared\TitleBarView.axaml.cs">
+			<DependentUpon>TitleBarView.axaml</DependentUpon>
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="Views\Shared\StatusBarView.axaml.cs">
+			<DependentUpon>StatusBarView.axaml</DependentUpon>
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="Views\Player\HeroView.axaml.cs">
+			<DependentUpon>HeroView.axaml</DependentUpon>
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="Views\Player\SheetView.axaml.cs">
+			<DependentUpon>SheetView.axaml</DependentUpon>
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="Views\Player\SyntaxLegendView.axaml.cs">
+			<DependentUpon>SyntaxLegendView.axaml</DependentUpon>
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="Views\Player\PlaybackView.axaml.cs">
+			<DependentUpon>PlaybackView.axaml</DependentUpon>
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="Views\Settings\SettingsView.axaml.cs">
+			<DependentUpon>SettingsView.axaml</DependentUpon>
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="Views\Settings\SettingsSidebarView.axaml.cs">
+			<DependentUpon>SettingsSidebarView.axaml</DependentUpon>
+			<SubType>Code</SubType>
+		</Compile>
+	</ItemGroup>
+</Project>

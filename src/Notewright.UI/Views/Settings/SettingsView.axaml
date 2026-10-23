@@ -1,0 +1,14 @@
+﻿<UserControl
+	xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:vm="using:Notewright.UI.ViewModels"
+	xmlns:settings="using:Notewright.UI.Views.Settings"
+	x:Class="Notewright.UI.Views.Settings.SettingsView"
+	x:DataType="vm:SettingsViewModel"
+	Background="#1a1a1a"
+>
+	<Grid ColumnDefinitions="220,*">
+		<settings:SettingsSidebarView Grid.Column="0" />
+		<settings:HotkeySettingsView Grid.Column="1" />
+	</Grid>
+</UserControl>

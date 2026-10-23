@@ -1,0 +1,33 @@
+<Solution Description="[Description]" Version="0.0.0">
+	<Folder Name="/src/">
+		<Project Path="src/Notewright.Core/Notewright.Core.csproj" />
+		<Project Path="src/Notewright.Input/Notewright.Input.csproj" />
+		<Project Path="src/Notewright.UI/Notewright.UI.csproj" />
+	</Folder>
+
+	<Folder Name="/Notewright/">
+		<File Path=".gitignore" />
+		<File Path=".gitattributes" />
+		<File Path=".editorconfig" />
+		<File Path="dotnet-tools.json" />
+		<File Path="global.json" />
+		<File Path="LICENSE" />
+		<File Path="README.md" />
+		<File Path="SECURITY.md" />
+		<File Path="Directory.Build.props" />
+		<File Path="Directory.Packages.props" />
+	</Folder>
+
+	<Folder Name="/.github/">
+		<File Path=".github/cliff.toml" />
+		<File Path=".github/dependabot.yml" />
+		<File Path=".github/PULL_REQUEST_TEMPLATE.md" />
+		<File Path=".github/ISSUE_TEMPLATE/bug_report.yml" />
+	</Folder>
+
+	<Folder Name="/.github/workflows/">
+		<File Path=".github/workflows/ci-cd.yml" />
+		<File Path=".github/workflows/release.yml" />
+		<File Path=".github/workflows/codeql.yml" />
+	</Folder>
+</Solution>

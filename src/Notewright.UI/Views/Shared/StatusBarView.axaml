@@ -1,0 +1,28 @@
+﻿<UserControl
+	xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:vm="using:Notewright.UI.ViewModels"
+	x:Class="Notewright.UI.Views.Shared.StatusBarView"
+	x:DataType="vm:MainWindowViewModel"
+>
+	<Border Background="#111111" BorderBrush="#2a2a2a" BorderThickness="0,1,0,0" Padding="16,0">
+		<DockPanel Height="28">
+			<TextBlock
+				DockPanel.Dock="Left"
+				Text="{Binding StatusBarViewModel.StatusMessage}"
+				Foreground="#666666"
+				FontSize="11"
+				VerticalAlignment="Center"
+			/>
+
+			<TextBlock
+				DockPanel.Dock="Right"
+				Text="{Binding StatusBarViewModel.InfoText}"
+				Foreground="#666666"
+				FontSize="11"
+				HorizontalAlignment="Right"
+				VerticalAlignment="Center"
+			/>
+		</DockPanel>
+	</Border>
+</UserControl>

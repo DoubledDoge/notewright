@@ -1,0 +1,59 @@
+version: 2
+updates:
+  - package-ecosystem: 'nuget'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    open-pull-requests-limit: 3
+    labels:
+      - 'nuget'
+    reviewers:
+      - 'DoubledDoge'
+    assignees:
+      - 'DoubledDoge'
+    groups:
+      nuget-dependencies:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+          - 'major'
+    commit-message:
+      prefix: 'chore'
+
+  - package-ecosystem: 'devcontainers'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    reviewers:
+      - 'DoubledDoge'
+    assignees:
+      - 'DoubledDoge'
+    commit-message:
+      prefix: 'chore'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    reviewers:
+      - 'DoubledDoge'
+    assignees:
+      - 'DoubledDoge'
+    groups:
+      actions-updates:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+          - 'major'
+    commit-message:
+      prefix: 'chore'

@@ -1,0 +1,22 @@
+﻿<UserControl
+	xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:vm="using:Notewright.UI.ViewModels"
+	xmlns:player="using:Notewright.UI.Views.Player"
+	x:Class="Notewright.UI.Views.Player.PlayerView"
+	x:DataType="vm:MainWindowViewModel"
+>
+	<DockPanel Background="#1a1a1a">
+		<player:HeroView
+			x:Name="HeroView"
+			DockPanel.Dock="Top"
+			DataContext="{Binding SheetViewModel}"
+		/>
+		<player:PlaybackView
+			x:Name="PlaybackView"
+			DockPanel.Dock="Bottom"
+			DataContext="{Binding PlaybackViewModel}"
+		/>
+		<player:SheetView x:Name="SheetView" DataContext="{Binding SheetViewModel}" />
+	</DockPanel>
+</UserControl>

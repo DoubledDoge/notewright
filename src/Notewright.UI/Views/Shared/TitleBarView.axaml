@@ -1,0 +1,33 @@
+﻿<UserControl
+	xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:vm="using:Notewright.UI.ViewModels"
+	x:Class="Notewright.UI.Views.Shared.TitleBarView"
+	x:DataType="vm:MainWindowViewModel"
+>
+	<Border Background="#111111" BorderBrush="#2a2a2a" BorderThickness="0,0,0,1" Padding="16,0">
+		<StackPanel Orientation="Horizontal" Spacing="4" Height="48" VerticalAlignment="Center">
+			<Button
+				Command="{Binding NavigateToPlayerCommand}"
+				Classes="tab"
+				Classes.active="{Binding IsPlayerPage}"
+			>
+				<StackPanel Orientation="Horizontal" Spacing="6">
+					<TextBlock Text="♩" VerticalAlignment="Center" />
+					<TextBlock Text="Player" VerticalAlignment="Center" />
+				</StackPanel>
+			</Button>
+
+			<Button
+				Command="{Binding NavigateToSettingsCommand}"
+				Classes="tab"
+				Classes.active="{Binding IsSettingsPage}"
+			>
+				<StackPanel Orientation="Horizontal" Spacing="6">
+					<TextBlock Text="⚙" VerticalAlignment="Center" />
+					<TextBlock Text="Settings" VerticalAlignment="Center" />
+				</StackPanel>
+			</Button>
+		</StackPanel>
+	</Border>
+</UserControl>

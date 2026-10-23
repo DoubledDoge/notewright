@@ -1,0 +1,167 @@
+﻿<UserControl
+	xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:vm="using:Notewright.UI.ViewModels"
+	xmlns:converters="clr-namespace:Notewright.UI.Converters"
+	x:Class="Notewright.UI.Views.Player.PlaybackView"
+	x:DataType="vm:PlaybackViewModel"
+>
+	<Border Background="#111111" BorderBrush="#2a2a2a" BorderThickness="0,1,0,0" Padding="16,12">
+		<StackPanel Spacing="12">
+			<DockPanel>
+				<ToggleButton DockPanel.Dock="Right" IsChecked="{Binding IsManualMode}" Classes="secondary">
+					<StackPanel Orientation="Horizontal" Spacing="6">
+						<PathIcon
+							Data="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"
+							Width="14"
+							Height="14"
+						/>
+						<TextBlock Text="{Binding ManualModeToggleText}" VerticalAlignment="Center" />
+					</StackPanel>
+				</ToggleButton>
+
+				<StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+					<Border
+						Background="{Binding IsManualMode, Converter={x:Static converters:PlaybackConverters.ModeBadgeBackground}}"
+						BorderBrush="{Binding IsManualMode, Converter={x:Static converters:PlaybackConverters.ModeBadgeBorder}}"
+						BorderThickness="1"
+						CornerRadius="4"
+						Padding="8,4"
+					>
+						<StackPanel Orientation="Horizontal" Spacing="6">
+							<TextBlock
+								Text="{Binding IsManualMode, Converter={x:Static converters:PlaybackConverters.ModeBadgeText}}"
+								Foreground="{Binding IsManualMode, Converter={x:Static converters:PlaybackConverters.ModeBadgeColor}}"
+								FontSize="11"
+								FontWeight="SemiBold"
+							/>
+						</StackPanel>
+					</Border>
+
+					<TextBlock
+						Text="{Binding IsManualMode, Converter={x:Static converters:PlaybackConverters.ModeDescriptionText}}"
+						Foreground="#666666"
+						FontSize="12"
+						VerticalAlignment="Center"
+					/>
+				</StackPanel>
+			</DockPanel>
+
+			<DockPanel>
+				<StackPanel
+					DockPanel.Dock="Right"
+					Orientation="Horizontal"
+					Spacing="24"
+					VerticalAlignment="Center"
+				>
+					<StackPanel Spacing="2">
+						<TextBlock Text="TEMPO" Foreground="#555555" FontSize="10" FontWeight="SemiBold" />
+						<StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+							<Button Classes="control" Content="-" Command="{Binding DecrementBpmCommand}" />
+							<StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+								<TextBlock
+									Text="{Binding Bpm}"
+									Foreground="#ffffff"
+									FontSize="20"
+									FontWeight="Bold"
+									VerticalAlignment="Center"
+									MinWidth="36"
+									TextAlignment="Center"
+								/>
+								<TextBlock
+									Text="BPM"
+									Foreground="#555555"
+									FontSize="11"
+									VerticalAlignment="Bottom"
+									Margin="0,0,0,3"
+								/>
+							</StackPanel>
+							<Button Classes="control" Content="+" Command="{Binding IncrementBpmCommand}" />
+						</StackPanel>
+					</StackPanel>
+
+					<StackPanel Spacing="2">
+						<TextBlock Text="TRANSPOSE" Foreground="#555555" FontSize="10" FontWeight="SemiBold" />
+						<StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+							<Button
+								Classes="control"
+								Content="-"
+								Command="{Binding DecrementTranspositionCommand}"
+							/>
+							<StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+								<TextBlock
+									Text="{Binding Transposition, StringFormat='+#;-#;+0'}"
+									Foreground="#ffffff"
+									FontSize="20"
+									FontWeight="Bold"
+									VerticalAlignment="Center"
+									MinWidth="36"
+									TextAlignment="Center"
+								/>
+								<TextBlock
+									Text="st"
+									Foreground="#555555"
+									FontSize="11"
+									VerticalAlignment="Bottom"
+									Margin="0,0,0,3"
+								/>
+							</StackPanel>
+							<Button
+								Classes="control"
+								Content="+"
+								Command="{Binding IncrementTranspositionCommand}"
+							/>
+						</StackPanel>
+					</StackPanel>
+				</StackPanel>
+
+				<StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+					<Button Command="{Binding PlayCommand}" Classes="primary">
+						<StackPanel Orientation="Horizontal" Spacing="6">
+							<TextBlock Text="▶" VerticalAlignment="Center" />
+							<TextBlock Text="Play" VerticalAlignment="Center" />
+						</StackPanel>
+					</Button>
+
+					<Button Command="{Binding PauseCommand}" Classes="secondary">
+						<StackPanel Orientation="Horizontal" Spacing="6">
+							<TextBlock Text="⏸" VerticalAlignment="Center" />
+							<TextBlock Text="Pause" VerticalAlignment="Center" />
+						</StackPanel>
+					</Button>
+
+					<Button Command="{Binding StopCommand}" Classes="secondary">
+						<StackPanel Orientation="Horizontal" Spacing="6">
+							<TextBlock Text="⏹" VerticalAlignment="Center" />
+							<TextBlock Text="Stop" VerticalAlignment="Center" />
+						</StackPanel>
+					</Button>
+
+					<StackPanel
+						Spacing="2"
+						Margin="8,0,0,0"
+						IsVisible="{Binding TotalBeats, Converter={x:Static converters:PlaybackConverters.IsNonZero}}"
+					>
+						<StackPanel Orientation="Horizontal" Spacing="6">
+							<TextBlock
+								Text="{Binding ElapsedTimeFormatted}"
+								Foreground="#ffffff"
+								FontSize="18"
+								FontWeight="SemiBold"
+								FontFamily="Courier New"
+							/>
+							<TextBlock Text="/" Foreground="#444444" FontSize="18" VerticalAlignment="Center" />
+							<TextBlock
+								Text="{Binding TotalDurationFormatted}"
+								Foreground="#444444"
+								FontSize="18"
+								FontFamily="Courier New"
+							/>
+						</StackPanel>
+						<TextBlock Text="{Binding StatusText}" Foreground="#555555" FontSize="11" />
+					</StackPanel>
+				</StackPanel>
+			</DockPanel>
+		</StackPanel>
+	</Border>
+</UserControl>
