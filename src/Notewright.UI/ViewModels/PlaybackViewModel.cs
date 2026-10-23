@@ -1,29 +1,34 @@
-﻿using System.Globalization;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Timers;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Notewright.Core.Models;
+using Notewright.Core.Models.Tokens;
+using Notewright.Input;
+using Notewright.UI.ViewModels.Enums;
+using Timer = System.Timers.Timer;
 
 namespace Notewright.UI.ViewModels;
 
-using Core.Models;
-using Core.Models.Tokens;
-using Enums;
-using Input;
-
 internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 {
-	private readonly IKeyboardSimulator _simulator;
+	private readonly Timer _elapsedTimer;
 	private readonly IGlobalHotkeyService _hotkeyService;
-	private readonly System.Timers.Timer _elapsedTimer;
+	private readonly IKeyboardSimulator _simulator;
 	private CancellationTokenSource? _cts;
-	private DateTime _playbackStarted;
 	private TimeSpan _elapsedBeforePause;
+
+	private int _manualBeatIndex;
+	private DateTime _playbackStarted;
 
 	public PlaybackViewModel(IKeyboardSimulator simulator, IGlobalHotkeyService hotkeyService)
 	{
 		_simulator = simulator;
 		_hotkeyService = hotkeyService;
-		_elapsedTimer = new System.Timers.Timer(100) { AutoReset = true };
+		_elapsedTimer = new Timer(100) { AutoReset = true };
 		_elapsedTimer.Elapsed += OnElapsedTimerTick;
 	}
 
@@ -33,7 +38,7 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		NotifyCanExecuteChangedFor(nameof(PauseCommand)),
 		NotifyCanExecuteChangedFor(nameof(StopCommand)),
 	]
-	public partial PlaybackStatus Status { get; set; } = PlaybackStatus.Idle;
+	private partial PlaybackStatus Status { get; set; } = PlaybackStatus.Idle;
 
 	[ObservableProperty]
 	public partial decimal Bpm { get; set; } = 120;
@@ -42,19 +47,19 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 	public partial decimal Transposition { get; set; }
 
 	[ObservableProperty, NotifyCanExecuteChangedFor(nameof(PlayCommand))]
-	public partial Sheet? Sheet { get; set; }
+	private partial Sheet? Sheet { get; set; }
 
 	[ObservableProperty, NotifyPropertyChangedFor(nameof(ManualModeToggleText))]
 	public partial bool IsManualMode { get; set; }
 
 	[ObservableProperty, NotifyPropertyChangedFor(nameof(ElapsedTimeFormatted))]
-	public partial TimeSpan ElapsedTime { get; set; }
+	private partial TimeSpan ElapsedTime { get; set; }
 
 	[ObservableProperty, NotifyPropertyChangedFor(nameof(TotalDurationFormatted))]
-	public partial TimeSpan TotalDuration { get; set; }
+	private partial TimeSpan TotalDuration { get; set; }
 
 	[ObservableProperty]
-	public partial int CurrentBeat { get; set; }
+	private partial int CurrentBeat { get; set; }
 
 	[ObservableProperty]
 	public partial int TotalBeats { get; set; }
@@ -62,20 +67,32 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 	[ObservableProperty]
 	public partial string StatusText { get; set; } = "Ready";
 
-	private int _manualBeatIndex;
-
 	public PlaybackConfig CurrentConfig => new((int)Bpm, (int)Transposition);
 
 	public string ElapsedTimeFormatted =>
 		ElapsedTime.ToString(@"mm\:ss", CultureInfo.InvariantCulture);
+
 	public string TotalDurationFormatted =>
 		TotalDuration.ToString(@"mm\:ss", CultureInfo.InvariantCulture);
+
 	public string ManualModeToggleText => IsManualMode ? "Switch to auto" : "Switch to manual";
+
+	private bool CanPlay => Status == PlaybackStatus.Idle && Sheet is not null;
+	private bool CanPause => Status == PlaybackStatus.Playing;
+	private bool CanStop => Status is PlaybackStatus.Playing or PlaybackStatus.Paused;
+
+	public void Dispose()
+	{
+		_cts?.Dispose();
+		_cts = null;
+		_elapsedTimer.Dispose();
+		GC.SuppressFinalize(this);
+	}
 
 	public void UpdateSheet(Sheet sheet)
 	{
 		ArgumentNullException.ThrowIfNull(sheet);
-		System.Diagnostics.Debug.WriteLine($"Sheet updated: {sheet.Tokens.Count} tokens");
+		Debug.WriteLine($"Sheet updated: {sheet.Tokens.Count} tokens");
 		Sheet = sheet;
 		TotalBeats = sheet.Tokens.Count;
 		TotalDuration = CalculateTotalDuration(sheet);
@@ -113,7 +130,7 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 	}
 
 	private void OnElapsedTimerTick(object? sender, ElapsedEventArgs e) =>
-		Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+		Dispatcher.UIThread.Post(() =>
 		{
 			ElapsedTime = _elapsedBeforePause + (DateTime.UtcNow - _playbackStarted);
 			StatusText = $"Playing · Beat {CurrentBeat} of {TotalBeats}";
@@ -135,35 +152,46 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		}
 	}
 
+	[SuppressMessage(
+		"Design",
+		"CA1031:Do not catch general exception types",
+		Justification = "Catches general playback exceptions to prevent crashing async void UI event handlers."
+	)]
 	private void OnManualBeatPressed() =>
-		Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+		Dispatcher.UIThread.Post(async void () =>
 		{
-			if (Sheet is null || _manualBeatIndex >= Sheet.Tokens.Count)
+			try
 			{
-				return;
-			}
+				if (Sheet is null || _manualBeatIndex >= Sheet.Tokens.Count)
+				{
+					return;
+				}
 
-			int beatIndex = _manualBeatIndex;
-			_manualBeatIndex++;
-			CurrentBeat = _manualBeatIndex;
-			StatusText = $"Manual · Beat {CurrentBeat} of {TotalBeats}";
+				int beatIndex = _manualBeatIndex;
+				_manualBeatIndex++;
+				CurrentBeat = _manualBeatIndex;
+				StatusText = $"Manual · Beat {CurrentBeat} of {TotalBeats}";
 
-			PlaybackEngine engine = new(_simulator);
-			await engine
-				.PlayTokenAsync(Sheet.Tokens[beatIndex], CurrentConfig, CancellationToken.None)
-				.ConfigureAwait(true);
+				PlaybackEngine engine = new(_simulator);
+				await engine
+					.PlayTokenAsync(Sheet.Tokens[beatIndex], CurrentConfig, CancellationToken.None)
+					.ConfigureAwait(true);
 
-			if (_manualBeatIndex >= Sheet.Tokens.Count)
-			{
+				if (_manualBeatIndex < Sheet.Tokens.Count)
+				{
+					return;
+				}
+
 				_manualBeatIndex = 0;
 				CurrentBeat = 0;
 				IsManualMode = false;
 			}
+			catch (Exception e)
+			{
+				Debug.WriteLine($"Playback error: {e.Message}");
+				StatusText = $"Error: {e.Message}";
+			}
 		});
-
-	private bool CanPlay => Status == PlaybackStatus.Idle && Sheet is not null;
-	private bool CanPause => Status == PlaybackStatus.Playing;
-	private bool CanStop => Status is PlaybackStatus.Playing or PlaybackStatus.Paused;
 
 	[RelayCommand(CanExecute = nameof(CanPlay))]
 	private async Task PlayAsync()
@@ -246,12 +274,4 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 	}
 
 	~PlaybackViewModel() => Dispose();
-
-	public void Dispose()
-	{
-		_cts?.Dispose();
-		_cts = null;
-		_elapsedTimer.Dispose();
-		GC.SuppressFinalize(this);
-	}
 }

@@ -1,40 +1,18 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Notewright.Core.Models;
+using Notewright.Core.Models.Tokens;
+using Notewright.Core.Parsing;
+using Notewright.UI.Services;
+using Notewright.UI.ViewModels.Enums;
 
 namespace Notewright.UI.ViewModels;
-
-using Core.Models;
-using Core.Parsing;
-using Enums;
-using Services;
 
 internal sealed partial class SheetViewModel : ObservableObject
 {
 	private readonly FileService _fileService;
 	private readonly PlaybackViewModel _playbackViewModel;
 	private readonly StatusBarViewModel _statusBarViewModel;
-
-	[ObservableProperty]
-	public partial string SheetText { get; set; } = string.Empty;
-
-	[ObservableProperty]
-	public partial string? ErrorMessage { get; set; }
-
-	[ObservableProperty]
-	public partial Sheet? ParsedSheet { get; set; }
-
-	[ObservableProperty]
-	public partial string FileName { get; set; } = "Untitled";
-
-	[ObservableProperty]
-	public partial ValidationStatus ValidationStatus { get; set; } = ValidationStatus.Empty;
-
-	public int LineCount => SheetText.Split('\n').Length;
-
-	public IRelayCommand ImportSheetCommand { get; }
-	public IRelayCommand ExportSheetCommand { get; }
-
-	private bool HasSheetText => !string.IsNullOrWhiteSpace(SheetText);
 
 	public SheetViewModel(
 		FileService fileService,
@@ -58,6 +36,28 @@ internal sealed partial class SheetViewModel : ObservableObject
 		};
 	}
 
+	[ObservableProperty]
+	public partial string SheetText { get; set; } = string.Empty;
+
+	[ObservableProperty]
+	public partial string? ErrorMessage { get; set; }
+
+	[ObservableProperty]
+	private partial Sheet? ParsedSheet { get; set; }
+
+	[ObservableProperty]
+	public partial string FileName { get; set; } = "Untitled";
+
+	[ObservableProperty]
+	public partial ValidationStatus ValidationStatus { get; set; } = ValidationStatus.Empty;
+
+	public int LineCount => SheetText.Split('\n').Length;
+
+	public IRelayCommand ImportSheetCommand { get; }
+	public IRelayCommand ExportSheetCommand { get; }
+
+	private bool HasSheetText => !string.IsNullOrWhiteSpace(SheetText);
+
 	private async Task ImportSheetAsync()
 	{
 		(string? content, string? fileName) = await _fileService
@@ -80,7 +80,7 @@ internal sealed partial class SheetViewModel : ObservableObject
 	partial void OnSheetTextChanged(string value)
 	{
 		ParseSheet();
-		_statusBarViewModel.InfoText = $"UTF-8 · Plain Text · {LineCount} lines";
+		_statusBarViewModel.InfoText = $"UTF-8 · Plain Text · {LineCount} lines {value}";
 	}
 
 	private void ParseSheet()
@@ -96,7 +96,7 @@ internal sealed partial class SheetViewModel : ObservableObject
 		}
 
 		Lexer lexer = new(SheetText);
-		ParseResult<IReadOnlyList<Core.Models.Tokens.TokenBase>> lexResult = lexer.Tokenize();
+		ParseResult<IReadOnlyList<TokenBase>> lexResult = lexer.Tokenize();
 		ParseResult<Sheet> parseResult = Parser.Parse(lexResult, _playbackViewModel.CurrentConfig);
 
 		if (!parseResult.IsSuccess)

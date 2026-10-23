@@ -6,11 +6,16 @@ namespace Notewright.Input.Windows;
 internal static partial class Win32
 {
 	internal const int KeyeventfKeyup = 0x0002;
-	internal const int KeyeventfExtendedkey = 0x0001;
 	internal const int WmHotkey = 0x0312;
 	internal const int HwndMessage = -3;
 	internal const uint WmRegisterHotkey = 0x8001;
 	internal const uint WmUnregisterHotkey = 0x8002;
+
+	[SuppressMessage(
+		"Interoperability",
+		"CA1421:This method uses runtime marshalling even when the \'DisableRuntimeMarshallingAttribute\' is applied"
+	)]
+	internal static readonly int InputSize = Marshal.SizeOf<Input>();
 
 	[
 		DefaultDllImportSearchPaths(DllImportSearchPath.System32),
@@ -91,10 +96,10 @@ internal static partial class Win32
 
 	[DefaultDllImportSearchPaths(DllImportSearchPath.System32), LibraryImport("user32.dll")]
 	[return: MarshalAs(UnmanagedType.Bool)]
-	internal static partial bool TranslateMessage(in Msg lpMsg);
+	internal static partial void TranslateMessage(in Msg lpMsg);
 
 	[DefaultDllImportSearchPaths(DllImportSearchPath.System32), LibraryImport("user32.dll")]
-	internal static partial nint DispatchMessageW(in Msg lpMsg);
+	internal static partial void DispatchMessageW(in Msg lpMsg);
 
 	[
 		DefaultDllImportSearchPaths(DllImportSearchPath.System32),
@@ -107,17 +112,7 @@ internal static partial class Win32
 		LibraryImport("user32.dll", SetLastError = true),
 	]
 	[return: MarshalAs(UnmanagedType.Bool)]
-	internal static partial bool UnregisterClassW(
-		[MarshalAs(UnmanagedType.LPWStr)] string lpClassName,
-		nint hInstance
-	);
-
-	[
-		DefaultDllImportSearchPaths(DllImportSearchPath.System32),
-		LibraryImport("user32.dll", SetLastError = true),
-	]
-	[return: MarshalAs(UnmanagedType.Bool)]
-	internal static partial bool PostMessageW(nint hWnd, uint msg, nint wParam, nint lParam);
+	internal static partial void PostMessageW(nint hWnd, uint msg, nint wParam, nint lParam);
 
 	[StructLayout(LayoutKind.Sequential)]
 	internal struct MouseInput
@@ -154,10 +149,4 @@ internal static partial class Win32
 		internal uint Type;
 		internal InputUnion Data;
 	}
-
-	[SuppressMessage(
-		"Interoperability",
-		"CA1421:This method uses runtime marshalling even when the \'DisableRuntimeMarshallingAttribute\' is applied"
-	)]
-	internal static readonly int InputSize = Marshal.SizeOf<Input>();
 }

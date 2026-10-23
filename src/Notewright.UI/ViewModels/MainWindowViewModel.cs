@@ -20,11 +20,8 @@ internal sealed partial class MainWindowViewModel(
 
 	public SheetViewModel SheetViewModel { get; } = sheetViewModel;
 	public PlaybackViewModel PlaybackViewModel { get; } = playbackViewModel;
-	public SettingsViewModel SettingsViewModel { get; } = settingsViewModel;
+	private SettingsViewModel SettingsViewModel { get; } = settingsViewModel;
 	public StatusBarViewModel StatusBarViewModel { get; } = statusBarViewModel;
-
-	public IRelayCommand ImportSheetCommand => SheetViewModel.ImportSheetCommand;
-	public IRelayCommand ExportSheetCommand => SheetViewModel.ExportSheetCommand;
 
 	public bool IsPlayerPage => CurrentPage is SheetViewModel;
 	public bool IsSettingsPage => CurrentPage is SettingsViewModel;

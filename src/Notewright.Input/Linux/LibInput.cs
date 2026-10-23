@@ -8,7 +8,6 @@ internal static partial class LibInput
 	private const string LibUdev = "libudev.so.1";
 
 	internal const uint LibinputEventKeyboardKeyPress = 300;
-	internal const uint LibinputEventKeyboardKeyRelease = 301;
 
 	[DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories), LibraryImport(LibUdev)]
 	internal static partial nint UdevNew();

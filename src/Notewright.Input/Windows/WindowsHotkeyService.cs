@@ -19,8 +19,8 @@ public sealed class WindowsHotkeyService : IGlobalHotkeyService
 	private static readonly ConcurrentDictionary<char, (int Id, Action OnPressed)> Hotkeys = new();
 	private readonly nint _hwnd;
 	private readonly Thread _messageThread;
-	private int _nextId = 1;
 	private bool _disposed;
+	private int _nextId = 1;
 
 	public unsafe WindowsHotkeyService()
 	{
@@ -65,6 +65,51 @@ public sealed class WindowsHotkeyService : IGlobalHotkeyService
 				: hwnd;
 	}
 
+	public void Register(char key, Action onPressed)
+	{
+		ArgumentNullException.ThrowIfNull(onPressed);
+		ObjectDisposedException.ThrowIf(_disposed, this);
+
+		ushort vkKeyScan = Win32.VkKeyScan(key);
+		ushort virtualKey = (ushort)(vkKeyScan & 0xFF);
+		int id = Interlocked.Increment(ref _nextId);
+
+		Hotkeys[key] = (id, onPressed);
+		Win32.PostMessageW(_hwnd, Win32.WmRegisterHotkey, id, virtualKey);
+	}
+
+	public void Unregister(char key)
+	{
+		ObjectDisposedException.ThrowIf(_disposed, this);
+
+		if (!Hotkeys.TryRemove(key, out (int Id, Action OnPressed) entry))
+		{
+			return;
+		}
+
+		Win32.PostMessageW(_hwnd, Win32.WmUnregisterHotkey, entry.Id, 0);
+	}
+
+	public void Dispose()
+	{
+		if (_disposed)
+		{
+			return;
+		}
+
+		foreach ((char key, _) in Hotkeys)
+		{
+			Unregister(key);
+		}
+
+		if (_hwnd != nint.Zero)
+		{
+			Win32.DestroyWindow(_hwnd);
+		}
+
+		_disposed = true;
+	}
+
 	private static void RunMessageLoop(TaskCompletionSource<nint> hwndSource)
 	{
 		nint hwnd = Win32.CreateWindowExW(
@@ -91,44 +136,17 @@ public sealed class WindowsHotkeyService : IGlobalHotkeyService
 		}
 	}
 
-	public void Register(char key, Action onPressed)
-	{
-		ArgumentNullException.ThrowIfNull(onPressed);
-		ObjectDisposedException.ThrowIf(_disposed, this);
-
-		ushort vkKeyScan = Win32.VkKeyScan(key);
-		ushort virtualKey = (ushort)(vkKeyScan & 0xFF);
-		int id = Interlocked.Increment(ref _nextId);
-
-		Hotkeys[key] = (id, onPressed);
-		Win32.PostMessageW(_hwnd, Win32.WmRegisterHotkey, id, virtualKey);
-	}
-
-	public void Unregister(char key)
-	{
-		ObjectDisposedException.ThrowIf(_disposed, this);
-
-		if (!Hotkeys.TryRemove(key, out (int Id, Action OnPressed) entry))
-		{
-			return;
-		}
-
-		Win32.PostMessageW(_hwnd, Win32.WmUnregisterHotkey, entry.Id, 0);
-	}
-
 	[UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
 	private static nint WndProcCallback(nint hWnd, uint msg, nint wParam, nint lParam)
 	{
-		if (msg == Win32.WmRegisterHotkey)
+		switch (msg)
 		{
-			Win32.RegisterHotKey(hWnd, (int)wParam, 0, (uint)lParam);
-			return nint.Zero;
-		}
-
-		if (msg == Win32.WmUnregisterHotkey)
-		{
-			Win32.UnregisterHotKey(hWnd, (int)wParam);
-			return nint.Zero;
+			case Win32.WmRegisterHotkey:
+				Win32.RegisterHotKey(hWnd, (int)wParam, 0, (uint)lParam);
+				return nint.Zero;
+			case Win32.WmUnregisterHotkey:
+				Win32.UnregisterHotKey(hWnd, (int)wParam);
+				return nint.Zero;
 		}
 
 		if (msg != Win32.WmHotkey)
@@ -150,25 +168,5 @@ public sealed class WindowsHotkeyService : IGlobalHotkeyService
 		}
 
 		return Win32.DefWindowProcW(hWnd, msg, wParam, lParam);
-	}
-
-	public void Dispose()
-	{
-		if (_disposed)
-		{
-			return;
-		}
-
-		foreach ((char key, _) in Hotkeys)
-		{
-			Unregister(key);
-		}
-
-		if (_hwnd != nint.Zero)
-		{
-			Win32.DestroyWindow(_hwnd);
-		}
-
-		_disposed = true;
 	}
 }

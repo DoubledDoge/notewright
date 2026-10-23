@@ -2,15 +2,14 @@ using System.Diagnostics.CodeAnalysis;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Notewright.Input;
+using Notewright.UI.Services;
+using Notewright.UI.ViewModels;
+using Notewright.UI.Views;
 
 namespace Notewright.UI;
 
-using Input;
-using Services;
-using ViewModels;
-using Views;
-
-internal sealed partial class App : Application
+internal sealed class App : Application
 {
 	public override void Initialize() => AvaloniaXamlLoader.Load(this);
 

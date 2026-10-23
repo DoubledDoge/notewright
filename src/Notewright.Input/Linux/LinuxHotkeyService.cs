@@ -16,30 +16,11 @@ namespace Notewright.Input.Linux;
 public sealed class LinuxHotkeyService : IGlobalHotkeyService
 {
 	private static readonly ConcurrentDictionary<char, Action> Hotkeys = new();
+	private readonly Thread _eventThread;
+	private readonly nint _libinput;
 
 	private readonly nint _udev;
-	private readonly nint _libinput;
-	private readonly Thread _eventThread;
 	private bool _disposed;
-
-	[UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
-	private static unsafe int OpenRestricted(byte* path, int flags, nint userData)
-	{
-		int fd = LibC.Open(path, flags);
-
-		return fd < 0 ? -Marshal.GetLastWin32Error() : fd;
-	}
-
-	[UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
-	private static void CloseRestricted(int fd, nint userData)
-	{
-		if (LibC.Close(fd) != 0)
-		{
-			throw new InvalidOperationException(
-				$"Failed to close file descriptor {fd} with error {Marshal.GetLastWin32Error()}."
-			);
-		}
-	}
 
 	public unsafe LinuxHotkeyService()
 	{
@@ -105,53 +86,6 @@ public sealed class LinuxHotkeyService : IGlobalHotkeyService
 		Hotkeys.TryRemove(key, out _);
 	}
 
-	private void RunEventLoop()
-	{
-		const bool isShifted = false;
-
-		while (!_disposed)
-		{
-			if (LibInput.LibinputDispatch(_libinput) != 0)
-			{
-				throw new InvalidOperationException(
-					"libinput dispatch failed. The input event loop cannot continue."
-				);
-			}
-
-			// ReSharper disable once InconsistentNaming
-			nint event_ = LibInput.LibinputGetEvent(_libinput);
-
-			while (event_ != nint.Zero)
-			{
-				uint type = LibInput.LibinputEventGetType(event_);
-
-				if (type == LibInput.LibinputEventKeyboardKeyPress)
-				{
-					nint keyboardEvent = LibInput.LibinputEventGetKeyboardEvent(event_);
-					uint keyCode = LibInput.LibinputEventKeyboardGetKey(keyboardEvent);
-					uint keyState = LibInput.LibinputEventKeyboardGetKeyState(keyboardEvent);
-
-					if (keyState == LibInput.LibinputEventKeyboardKeyPress)
-					{
-						char key = LinuxKeyCodeMap.ToChar(keyCode, isShifted);
-
-						if (key != '\0' && Hotkeys.TryGetValue(key, out Action? onPressed))
-						{
-							onPressed();
-						}
-					}
-				}
-
-				LibInput.LibinputEventDestroy(event_);
-				event_ = LibInput.LibinputGetEvent(_libinput);
-			}
-
-			Thread.Sleep(1);
-		}
-	}
-
-	~LinuxHotkeyService() => Dispose();
-
 	public void Dispose()
 	{
 		if (_disposed)
@@ -166,4 +100,69 @@ public sealed class LinuxHotkeyService : IGlobalHotkeyService
 
 		GC.SuppressFinalize(this);
 	}
+
+	[UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+	private static unsafe int OpenRestricted(byte* path, int flags, nint userData)
+	{
+		int fd = LibC.Open(path, flags);
+
+		return fd < 0 ? -Marshal.GetLastWin32Error() : fd;
+	}
+
+	[UnmanagedCallersOnly(CallConvs = [typeof(CallConvStdcall)])]
+	private static void CloseRestricted(int fd, nint userData)
+	{
+		if (LibC.Close(fd) != 0)
+		{
+			throw new InvalidOperationException(
+				$"Failed to close file descriptor {fd} with error {Marshal.GetLastWin32Error()}."
+			);
+		}
+	}
+
+	private void RunEventLoop()
+	{
+		const bool isShifted = false;
+
+		while (!_disposed)
+		{
+			if (LibInput.LibinputDispatch(_libinput) != 0)
+			{
+				throw new InvalidOperationException(
+					"libinput dispatch failed. The input event loop cannot continue."
+				);
+			}
+
+			nint libinputEvent = LibInput.LibinputGetEvent(_libinput);
+
+			while (libinputEvent != nint.Zero)
+			{
+				uint type = LibInput.LibinputEventGetType(libinputEvent);
+
+				if (type == LibInput.LibinputEventKeyboardKeyPress)
+				{
+					nint keyboardEvent = LibInput.LibinputEventGetKeyboardEvent(libinputEvent);
+					uint keyCode = LibInput.LibinputEventKeyboardGetKey(keyboardEvent);
+					uint keyState = LibInput.LibinputEventKeyboardGetKeyState(keyboardEvent);
+
+					if (keyState == LibInput.LibinputEventKeyboardKeyPress)
+					{
+						char key = LinuxKeyCodeMap.ToChar(keyCode, isShifted);
+
+						if (key != '\0' && Hotkeys.TryGetValue(key, out Action? onPressed))
+						{
+							onPressed();
+						}
+					}
+				}
+
+				LibInput.LibinputEventDestroy(libinputEvent);
+				libinputEvent = LibInput.LibinputGetEvent(_libinput);
+			}
+
+			Thread.Sleep(1);
+		}
+	}
+
+	~LinuxHotkeyService() => Dispose();
 }

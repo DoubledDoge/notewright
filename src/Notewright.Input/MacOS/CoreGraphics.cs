@@ -6,11 +6,11 @@ internal static partial class CoreGraphics
 {
 	private const string CoreGraphicsLib =
 		"/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics";
+
 	private const string CoreFoundationLib =
 		"/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation";
 
 	internal const uint KcgEventKeyDown = 10;
-	internal const uint KcgEventKeyUp = 11;
 	internal const uint KcghidEventTap = 0;
 	internal const uint KcgEventFlagMaskShift = 0x20000;
 	internal const uint KcgHeadInsertEventTap = 0;
@@ -70,13 +70,6 @@ internal static partial class CoreGraphics
 		nint callback,
 		nint userInfo
 	);
-
-	[
-		DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories),
-		LibraryImport(CoreGraphicsLib)
-	]
-	[return: MarshalAs(UnmanagedType.Bool)]
-	internal static partial bool CgEventTapIsEnabled(nint tap);
 
 	[
 		DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories),
