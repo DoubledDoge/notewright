@@ -15,6 +15,7 @@
 		<PackageReference Include="Avalonia.Desktop" />
 		<PackageReference Include="Avalonia.Themes.Fluent" />
 		<PackageReference Include="Avalonia.Fonts.Inter" />
+		<PackageReference Include="Avalonia.AvaloniaEdit" />
 		<PackageReference Include="Avalonia.Diagnostics">
 			<IncludeAssets Condition="'$(Configuration)' == 'Release'">None</IncludeAssets>
 			<PrivateAssets Condition="'$(Configuration)' == 'Release'">All</PrivateAssets>

@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Diagnostics;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Notewright.Core.Models;
 using Notewright.Core.Models.Tokens;
@@ -40,7 +41,7 @@ internal sealed partial class SheetViewModel : ObservableObject
 	public partial string SheetText { get; set; } = string.Empty;
 
 	[ObservableProperty]
-	public partial string? ErrorMessage { get; set; }
+	public partial IReadOnlyList<DiagnosticItem> Diagnostics { get; set; } = [];
 
 	[ObservableProperty]
 	private partial Sheet? ParsedSheet { get; set; }
@@ -79,13 +80,14 @@ internal sealed partial class SheetViewModel : ObservableObject
 
 	partial void OnSheetTextChanged(string value)
 	{
+		Debug.WriteLine($"Sheet text changed: {value}");
 		ParseSheet();
-		_statusBarViewModel.InfoText = $"UTF-8 · Plain Text · {LineCount} lines {value}";
+		_statusBarViewModel.InfoText = $"UTF-8 · Plain Text · {LineCount} lines";
 	}
 
 	private void ParseSheet()
 	{
-		ErrorMessage = null;
+		Diagnostics = [];
 		ParsedSheet = null;
 
 		if (string.IsNullOrWhiteSpace(SheetText))
@@ -101,7 +103,7 @@ internal sealed partial class SheetViewModel : ObservableObject
 
 		if (!parseResult.IsSuccess)
 		{
-			ErrorMessage = string.Join(Environment.NewLine, parseResult.Errors);
+			Diagnostics = [.. parseResult.Errors.Select(ToItem)];
 			ValidationStatus = ValidationStatus.Invalid;
 			_playbackViewModel.ClearSheet();
 			return;
@@ -111,5 +113,26 @@ internal sealed partial class SheetViewModel : ObservableObject
 		ValidationStatus = ValidationStatus.Valid;
 		_playbackViewModel.UpdateSheet(ParsedSheet!);
 		_playbackViewModel.PlayCommand.NotifyCanExecuteChanged();
+	}
+
+	private DiagnosticItem ToItem(Diagnostic d)
+	{
+		int line = 1,
+			column = 1;
+
+		for (int i = 0; i < d.Start && i < SheetText.Length; i++)
+		{
+			if (SheetText[i] == '\n')
+			{
+				line++;
+				column = 1;
+			}
+			else
+			{
+				column++;
+			}
+		}
+
+		return new DiagnosticItem(d.Start, d.Length, line, column, d.Message);
 	}
 }

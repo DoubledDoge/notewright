@@ -1,5 +1,6 @@
 ﻿<UserControl
 	xmlns="https://github.com/avaloniaui"
+	xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:vm="using:Notewright.UI.ViewModels"
 	xmlns:player="using:Notewright.UI.Views.Player"
@@ -53,17 +54,46 @@
 
 			<player:SyntaxLegendView DockPanel.Dock="Bottom" />
 
-			<TextBox
-				Text="{Binding SheetText, UpdateSourceTrigger=PropertyChanged}"
-				AcceptsReturn="true"
-				TextWrapping="Wrap"
-				PlaceholderText="Paste or import a sheet here..."
+			<Border
+				DockPanel.Dock="Bottom"
+				MaxHeight="120"
+				BorderBrush="#2a2a2a"
+				BorderThickness="0,1,0,0"
+				IsVisible="{Binding Diagnostics.Count, Converter={x:Static converters:PlaybackConverters.IsNonZero}}"
+			>
+				<ListBox
+					ItemsSource="{Binding Diagnostics}"
+					SelectionChanged="OnDiagnosticSelected"
+					Background="Transparent"
+				>
+					<ListBox.ItemTemplate>
+						<DataTemplate x:DataType="vm:DiagnosticItem">
+							<StackPanel Orientation="Horizontal" Spacing="8">
+								<TextBlock
+									Text="{Binding Location}"
+									Foreground="#f87171"
+									FontFamily="Courier New"
+									FontSize="11"
+								/>
+								<TextBlock
+									Text="{Binding Message}"
+									Foreground="#cccccc"
+									FontSize="11"
+									TextWrapping="Wrap"
+								/>
+							</StackPanel>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
+			</Border>
+
+			<avaloniaEdit:TextEditor
+				x:Name="Editor"
 				FontFamily="Courier New, Courier, monospace"
 				FontSize="13"
 				Background="Transparent"
-				BorderThickness="0"
 				Foreground="#cccccc"
-				CaretBrush="#4ade80"
+				WordWrap="True"
 				Padding="12"
 			/>
 		</DockPanel>
