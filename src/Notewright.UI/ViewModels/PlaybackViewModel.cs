@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using Notewright.Core.Models;
 using Notewright.Core.Models.Tokens;
 using Notewright.Input;
+using Notewright.UI.Services;
 using Notewright.UI.ViewModels.Enums;
 using Timer = System.Timers.Timer;
 
@@ -15,19 +16,26 @@ namespace Notewright.UI.ViewModels;
 
 internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 {
+	private readonly HotkeyBindings _bindings;
 	private readonly Timer _elapsedTimer;
 	private readonly IGlobalHotkeyService _hotkeyService;
 	private readonly IKeyboardSimulator _simulator;
+	private bool _autoHotkeyRegistered;
 	private CancellationTokenSource? _cts;
 	private TimeSpan _elapsedBeforePause;
 	private int _manualBeatIndex;
 	private IReadOnlyList<TokenBase> _manualTokens = [];
 	private DateTime _playbackStarted;
 
-	public PlaybackViewModel(IKeyboardSimulator simulator, IGlobalHotkeyService hotkeyService)
+	public PlaybackViewModel(
+		IKeyboardSimulator simulator,
+		IGlobalHotkeyService hotkeyService,
+		HotkeyBindings bindings
+	)
 	{
 		_simulator = simulator;
 		_hotkeyService = hotkeyService;
+		_bindings = bindings;
 		_elapsedTimer = new Timer(100) { AutoReset = true };
 		_elapsedTimer.Elapsed += OnElapsedTimerTick;
 	}
@@ -103,9 +111,6 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		StatusText = $"Ready · Beat 1 of {TotalBeats}";
 	}
 
-	private void RefreshBeatCount() =>
-		TotalBeats = IsManualMode ? _manualTokens.Count : Sheet?.Tokens.Count ?? 0;
-
 	public void ClearSheet()
 	{
 		Sheet = null;
@@ -118,6 +123,53 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		StatusText = "Ready";
 		PlayCommand.NotifyCanExecuteChanged();
 	}
+
+	public void SetAutoHotkeyActive(bool active)
+	{
+		if (active == _autoHotkeyRegistered)
+		{
+			return; // WindowsHotkeyService leaks an OS registration on double Register
+		}
+
+		_autoHotkeyRegistered = active;
+
+		if (active)
+		{
+			_hotkeyService.Register(_bindings.Auto, OnAutoHotkeyPressed);
+		}
+		else
+		{
+			_hotkeyService.Unregister(_bindings.Auto);
+		}
+	}
+
+	private void OnAutoHotkeyPressed() =>
+		Dispatcher.UIThread.Post(() =>
+		{
+			if (IsManualMode)
+			{
+				IsManualMode = false; // starting auto leaves manual mode
+			}
+
+			if (PlayCommand.CanExecute(null))
+			{
+				PlayCommand.Execute(null);
+			}
+		});
+
+	public void RebindManualHotkey(char oldKey, char newKey)
+	{
+		if (!IsManualMode)
+		{
+			return;
+		}
+
+		_hotkeyService.Unregister(oldKey);
+		_hotkeyService.Register(newKey, OnManualBeatPressed);
+	}
+
+	private void RefreshBeatCount() =>
+		TotalBeats = IsManualMode ? _manualTokens.Count : Sheet?.Tokens.Count ?? 0;
 
 	private TimeSpan CalculateTotalDuration(Sheet sheet)
 	{
@@ -149,12 +201,12 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 
 		if (value)
 		{
-			_hotkeyService.Register('=', OnManualBeatPressed);
+			_hotkeyService.Register(_bindings.Manual, OnManualBeatPressed);
 			StatusText = "Manual mode · Press hotkey to advance";
 		}
 		else
 		{
-			_hotkeyService.Unregister('=');
+			_hotkeyService.Unregister(_bindings.Manual);
 			StatusText = Sheet is not null ? $"Ready · Beat 1 of {TotalBeats}" : "Ready";
 		}
 	}

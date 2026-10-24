@@ -1,14 +1,15 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Notewright.Input;
+using Notewright.UI.Services;
 
 namespace Notewright.UI.ViewModels;
-
-using Input;
 
 internal sealed partial class SettingsViewModel(
 	IGlobalHotkeyService hotkeyService,
 	PlaybackViewModel playbackViewModel,
 	StatusBarViewModel statusBarViewModel,
+	HotkeyBindings bindings,
 	Action navigateBack
 ) : ObservableObject
 {
@@ -18,7 +19,7 @@ internal sealed partial class SettingsViewModel(
 	public partial string ManualHotkeyInput { get; set; } = string.Empty;
 
 	[ObservableProperty]
-	public partial char CurrentManualHotkey { get; set; } = '=';
+	public partial char CurrentManualHotkey { get; set; } = bindings.Manual;
 
 	[ObservableProperty]
 	public partial string? HotkeyErrorMessage { get; set; }
@@ -35,19 +36,19 @@ internal sealed partial class SettingsViewModel(
 	[ObservableProperty]
 	public partial bool IsChangingHotkey { get; set; }
 
-	public void SetNavigateBack(Action navigateBack) => _navigateBack = navigateBack;
-
 	private bool CanSaveHotkey =>
 		!string.IsNullOrWhiteSpace(ManualHotkeyInput)
 		&& ManualHotkeyInput.Length == 1
 		&& !HasConflict;
+
+	public void SetNavigateBack(Action navigateBack) => _navigateBack = navigateBack;
 
 	partial void OnManualHotkeyInputChanged(string value)
 	{
 		if (string.IsNullOrWhiteSpace(value) || value.Length != 1)
 		{
 			HasConflict = false;
-			ConflictStatus = "Available · No conflicts";
+			ConflictStatus = "Available - No conflicts";
 			return;
 		}
 
@@ -56,9 +57,10 @@ internal sealed partial class SettingsViewModel(
 		// Check against known system reserved keys
 		HasConflict = key is '\t' or '\r' or '\n' or ' ' or '\b';
 
-		ConflictStatus = HasConflict
-			? "Conflict detected · Choose a different key"
-			: "Available · No conflicts";
+		ConflictStatus =
+			HasConflict || key == bindings.Auto
+				? "Conflict detected - Choose a different key"
+				: "Available - No conflicts";
 
 		IsSaved = false;
 	}
@@ -83,8 +85,8 @@ internal sealed partial class SettingsViewModel(
 
 		if (playbackViewModel.IsManualMode)
 		{
-			hotkeyService.Unregister(CurrentManualHotkey);
-			hotkeyService.Register(newKey, () => { });
+			playbackViewModel.RebindManualHotkey(CurrentManualHotkey, newKey);
+			bindings.Manual = newKey;
 		}
 
 		CurrentManualHotkey = newKey;
