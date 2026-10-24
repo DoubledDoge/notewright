@@ -1,4 +1,3 @@
-using System.Globalization;
 using Notewright.Core.Models;
 using Notewright.Core.Models.Tokens;
 
@@ -77,19 +76,17 @@ public sealed class Lexer(string input)
 		return null;
 	}
 
-	private static bool IsNoteChar(char c) => char.IsAsciiLetterOrDigit(c);
+	private static bool IsNoteChar(char c) =>
+		char.IsAsciiLetterOrDigit(c) || VirtualPianoKeyMap.ShiftedSymbols.ContainsKey(c);
 
 	private NoteToken ReadSingleNote(DelayAfter delay = DelayAfter.None)
 	{
 		char key = Current;
 		_position++;
 
-		return new NoteToken(
-			Raw: key.ToString(),
-			Key: char.ToLower(key, CultureInfo.CurrentCulture),
-			IsShifted: char.IsUpper(key),
-			DelayAfter: delay
-		);
+		return VirtualPianoKeyMap.ShiftedSymbols.TryGetValue(key, out char baseKey)
+			? new NoteToken(key.ToString(), baseKey, true, delay)
+			: new NoteToken(key.ToString(), char.ToLowerInvariant(key), char.IsUpper(key), delay);
 	}
 
 	private TokenBase ReadNoteOrLegatoRun()
@@ -181,7 +178,7 @@ public sealed class Lexer(string input)
 				Report(
 					_position,
 					1,
-					$"'{Current}' isn't allowed inside a {name}. Only note keys (a-z, 0-9) can go between the brackets."
+					$"'{Current}' isn't allowed inside a {name}. Only notes can go between the brackets."
 				);
 				_position++;
 			}

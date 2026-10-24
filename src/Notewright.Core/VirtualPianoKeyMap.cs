@@ -51,4 +51,18 @@ public static class VirtualPianoKeyMap
 		['*'] = '*',
 		['('] = '(',
 	};
+
+	public static readonly IReadOnlyDictionary<char, char> ShiftedSymbols = new Dictionary<
+		char,
+		char
+	>
+	{
+		['!'] = '1',
+		['@'] = '2',
+		['$'] = '4',
+		['%'] = '5',
+		['^'] = '6',
+		['*'] = '8',
+		['('] = '9',
+	};
 }
