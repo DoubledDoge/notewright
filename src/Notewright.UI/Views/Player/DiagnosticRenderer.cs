@@ -21,6 +21,7 @@ internal sealed class DiagnosticRenderer : IBackgroundRenderer
 		}
 
 		int length = textView.Document.TextLength;
+
 		foreach (DiagnosticItem d in Diagnostics)
 		{
 			if (d.Start >= length)
@@ -33,6 +34,7 @@ internal sealed class DiagnosticRenderer : IBackgroundRenderer
 				StartOffset = d.Start,
 				Length = Math.Min(Math.Max(1, d.Length), length - d.Start),
 			};
+
 			foreach (Rect rect in BackgroundGeometryBuilder.GetRectsForSegment(textView, segment))
 			{
 				DrawSquiggle(drawingContext, rect);
@@ -44,12 +46,15 @@ internal sealed class DiagnosticRenderer : IBackgroundRenderer
 	{
 		const double step = 2,
 			height = 2;
+
 		double baseline = rect.Bottom - height;
 		StreamGeometry geometry = new();
+
 		using (StreamGeometryContext g = geometry.Open())
 		{
 			g.BeginFigure(new Point(rect.Left, baseline), false);
 			bool down = true;
+
 			for (double x = rect.Left + step; x < rect.Right + step; x += step)
 			{
 				g.LineTo(new Point(Math.Min(x, rect.Right), baseline + (down ? height : 0)));
