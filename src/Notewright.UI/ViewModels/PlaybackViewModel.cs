@@ -221,13 +221,12 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		{
 			try
 			{
-				if (Sheet is null || _manualBeatIndex >= Sheet.Tokens.Count)
+				if (Sheet is null || _manualBeatIndex >= _manualTokens.Count)
 				{
 					return;
 				}
 
 				int beatIndex = _manualBeatIndex++;
-				_manualBeatIndex++;
 				CurrentBeat = _manualBeatIndex;
 				StatusText = $"Manual · Beat {CurrentBeat} of {TotalBeats}";
 
