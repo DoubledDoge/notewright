@@ -20,8 +20,8 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 	private readonly IKeyboardSimulator _simulator;
 	private CancellationTokenSource? _cts;
 	private TimeSpan _elapsedBeforePause;
-
 	private int _manualBeatIndex;
+	private IReadOnlyList<TokenBase> _manualTokens = [];
 	private DateTime _playbackStarted;
 
 	public PlaybackViewModel(IKeyboardSimulator simulator, IGlobalHotkeyService hotkeyService)
@@ -94,12 +94,17 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		ArgumentNullException.ThrowIfNull(sheet);
 		Debug.WriteLine($"Sheet updated: {sheet.Tokens.Count} tokens");
 		Sheet = sheet;
-		TotalBeats = sheet.Tokens.Count;
+		_manualTokens = [.. sheet.Tokens.Where(t => t is not RestToken)];
+		_manualBeatIndex = 0;
+		RefreshBeatCount();
 		TotalDuration = CalculateTotalDuration(sheet);
 		CurrentBeat = 0;
 		ElapsedTime = TimeSpan.Zero;
 		StatusText = $"Ready · Beat 1 of {TotalBeats}";
 	}
+
+	private void RefreshBeatCount() =>
+		TotalBeats = IsManualMode ? _manualTokens.Count : Sheet?.Tokens.Count ?? 0;
 
 	public void ClearSheet()
 	{
@@ -108,6 +113,7 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		TotalDuration = TimeSpan.Zero;
 		CurrentBeat = 0;
 		ElapsedTime = TimeSpan.Zero;
+		_manualTokens = [];
 		_manualBeatIndex = 0;
 		StatusText = "Ready";
 		PlayCommand.NotifyCanExecuteChanged();
@@ -138,6 +144,7 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 
 	partial void OnIsManualModeChanged(bool value)
 	{
+		RefreshBeatCount();
 		OnPropertyChanged(nameof(ManualModeToggleText));
 
 		if (value)
@@ -167,17 +174,22 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 					return;
 				}
 
-				int beatIndex = _manualBeatIndex;
+				int beatIndex = _manualBeatIndex++;
 				_manualBeatIndex++;
 				CurrentBeat = _manualBeatIndex;
 				StatusText = $"Manual · Beat {CurrentBeat} of {TotalBeats}";
 
 				PlaybackEngine engine = new(_simulator);
 				await engine
-					.PlayTokenAsync(Sheet.Tokens[beatIndex], CurrentConfig, CancellationToken.None)
+					.PlayTokenAsync(
+						_manualTokens[beatIndex],
+						CurrentConfig,
+						true,
+						CancellationToken.None
+					)
 					.ConfigureAwait(true);
 
-				if (_manualBeatIndex < Sheet.Tokens.Count)
+				if (_manualBeatIndex < _manualTokens.Count)
 				{
 					return;
 				}

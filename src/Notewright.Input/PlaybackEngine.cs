@@ -1,7 +1,7 @@
-namespace Notewright.Input;
+using Notewright.Core.Models;
+using Notewright.Core.Models.Tokens;
 
-using Core.Models;
-using Core.Models.Tokens;
+namespace Notewright.Input;
 
 public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 {
@@ -15,70 +15,19 @@ public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 	{
 		ArgumentNullException.ThrowIfNull(sheet);
 
-		double msPerBeat = MillisecondsPerMinute / sheet.Config.Bpm;
-
 		foreach (TokenBase token in sheet.Tokens)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
-			switch (token)
-			{
-				case NoteToken note:
-					simulator.KeyPress(note);
-
-					await ApplyDelayAsync(note.DelayAfter, msPerBeat, cancellationToken)
-						.ConfigureAwait(true);
-					break;
-
-				case ChordToken chord:
-					foreach (NoteToken note in chord.Notes)
-					{
-						simulator.KeyPress(note);
-					}
-
-					await Task.Delay(TimeSpan.FromMilliseconds(msPerBeat), cancellationToken)
-						.ConfigureAwait(true);
-					break;
-
-				case RollToken roll:
-					foreach (NoteToken note in roll.Notes)
-					{
-						simulator.KeyPress(note);
-
-						await Task.Delay(TimeSpan.FromMilliseconds(RollDelay), cancellationToken)
-							.ConfigureAwait(true);
-					}
-					await Task.Delay(TimeSpan.FromMilliseconds(msPerBeat), cancellationToken)
-						.ConfigureAwait(true);
-					break;
-
-				case LegatoRunToken legato:
-					foreach (NoteToken note in legato.Notes)
-					{
-						simulator.KeyPress(note);
-
-						await Task.Delay(
-								TimeSpan.FromMilliseconds(msPerBeat / LegatoDelayFraction),
-								cancellationToken
-							)
-							.ConfigureAwait(true);
-					}
-					break;
-
-				case RestToken rest:
-					await Task.Delay(
-							TimeSpan.FromMilliseconds(msPerBeat * rest.Units),
-							cancellationToken
-						)
-						.ConfigureAwait(true);
-					break;
-			}
+			await PlayTokenAsync(token, sheet.Config, false, cancellationToken)
+				.ConfigureAwait(true);
 		}
 	}
 
 	public async Task PlayTokenAsync(
 		TokenBase token,
 		PlaybackConfig config,
+		bool manual = false,
 		CancellationToken cancellationToken = default
 	)
 	{
@@ -91,8 +40,13 @@ public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 		{
 			case NoteToken note:
 				simulator.KeyPress(note);
-				await ApplyDelayAsync(note.DelayAfter, msPerBeat, cancellationToken)
-					.ConfigureAwait(true);
+
+				if (!manual)
+				{
+					await ApplyDelayAsync(note.DelayAfter, msPerBeat, cancellationToken)
+						.ConfigureAwait(true);
+				}
+
 				break;
 
 			case ChordToken chord:
@@ -101,8 +55,12 @@ public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 					simulator.KeyPress(note);
 				}
 
-				await Task.Delay(TimeSpan.FromMilliseconds(msPerBeat), cancellationToken)
-					.ConfigureAwait(true);
+				if (!manual)
+				{
+					await Task.Delay(TimeSpan.FromMilliseconds(msPerBeat), cancellationToken)
+						.ConfigureAwait(true);
+				}
+
 				break;
 
 			case RollToken roll:
@@ -112,8 +70,13 @@ public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 					await Task.Delay(TimeSpan.FromMilliseconds(RollDelay), cancellationToken)
 						.ConfigureAwait(true);
 				}
-				await Task.Delay(TimeSpan.FromMilliseconds(msPerBeat), cancellationToken)
-					.ConfigureAwait(true);
+
+				if (!manual)
+				{
+					await Task.Delay(TimeSpan.FromMilliseconds(msPerBeat), cancellationToken)
+						.ConfigureAwait(true);
+				}
+
 				break;
 
 			case LegatoRunToken legato:
@@ -126,9 +89,10 @@ public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 						)
 						.ConfigureAwait(true);
 				}
+
 				break;
 
-			case RestToken rest:
+			case RestToken rest when !manual:
 				await Task.Delay(
 						TimeSpan.FromMilliseconds(msPerBeat * rest.Units),
 						cancellationToken
