@@ -1,67 +1,54 @@
 ﻿<UserControl
 	xmlns="https://github.com/avaloniaui"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:player="using:Notewright.UI.Views.Player"
 	x:Class="Notewright.UI.Views.Player.SyntaxLegendView"
 >
 	<Border Padding="12,8" BorderBrush="#2a2a2a" BorderThickness="0,1,0,0" Background="#111111">
-		<StackPanel Orientation="Horizontal" Spacing="16">
-			<TextBlock
-				Text="SYNTAX"
-				Foreground="#444444"
-				FontSize="10"
-				FontWeight="SemiBold"
-				VerticalAlignment="Center"
-			/>
-
-			<StackPanel Orientation="Horizontal" Spacing="4">
+		<StackPanel Spacing="4">
+			<DockPanel>
 				<TextBlock
-					Text="q"
-					Foreground="#cccccc"
-					FontFamily="Courier New"
-					FontSize="11"
-					VerticalAlignment="Center"
+					DockPanel.Dock="Left"
+					Text="SYNTAX"
+					Foreground="#444444"
+					FontSize="10"
+					FontWeight="SemiBold"
+					Margin="0,3,16,0"
 				/>
-				<TextBlock
-					Text="Single note"
-					Foreground="#555555"
-					FontSize="11"
-					VerticalAlignment="Center"
-				/>
-			</StackPanel>
-
-			<StackPanel Orientation="Horizontal" Spacing="4">
-				<Border Background="#2a2a2a" CornerRadius="2" Padding="4,1">
-					<TextBlock Text="[qet]" Foreground="#4ade80" FontFamily="Courier New" FontSize="11" />
-				</Border>
-				<TextBlock Text="Chord" Foreground="#555555" FontSize="11" VerticalAlignment="Center" />
-			</StackPanel>
-
-			<StackPanel Orientation="Horizontal" Spacing="4">
-				<TextBlock Text="space" Foreground="#888888" FontSize="11" VerticalAlignment="Center" />
-				<TextBlock Text="Next beat" Foreground="#555555" FontSize="11" VerticalAlignment="Center" />
-			</StackPanel>
-
-			<StackPanel Orientation="Horizontal" Spacing="4">
-				<TextBlock
-					Text="-"
-					Foreground="#cccccc"
-					FontFamily="Courier New"
-					FontSize="11"
-					VerticalAlignment="Center"
-				/>
-				<TextBlock Text="Rest" Foreground="#555555" FontSize="11" VerticalAlignment="Center" />
-			</StackPanel>
-
-			<StackPanel Orientation="Horizontal" Spacing="4">
-				<TextBlock
-					Text="|"
-					Foreground="#cccccc"
-					FontFamily="Courier New"
-					FontSize="11"
-					VerticalAlignment="Center"
-				/>
-				<TextBlock Text="Bar line" Foreground="#555555" FontSize="11" VerticalAlignment="Center" />
-			</StackPanel>
+				<ItemsControl ItemsSource="{x:Static player:SyntaxLegendView.Entries}">
+					<ItemsControl.ItemsPanel>
+						<ItemsPanelTemplate>
+							<WrapPanel />
+						</ItemsPanelTemplate>
+					</ItemsControl.ItemsPanel>
+					<ItemsControl.ItemTemplate>
+						<DataTemplate x:DataType="player:SyntaxLegendEntry">
+							<StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,16,6">
+								<Border Background="#2a2a2a" CornerRadius="2" Padding="4,1">
+									<TextBlock
+										Text="{Binding Example}"
+										Foreground="#4ade80"
+										FontFamily="Courier New"
+										FontSize="11"
+									/>
+								</Border>
+								<TextBlock
+									Text="{Binding Title}"
+									Foreground="#cccccc"
+									FontSize="11"
+									VerticalAlignment="Center"
+								/>
+								<TextBlock
+									Text="{Binding Description}"
+									Foreground="#555555"
+									FontSize="11"
+									VerticalAlignment="Center"
+								/>
+							</StackPanel>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+			</DockPanel>
 		</StackPanel>
 	</Border>
 </UserControl>
