@@ -1,21 +1,23 @@
 using System.Globalization;
+using Notewright.Core.Models;
+using Notewright.Core.Models.Tokens;
 
 namespace Notewright.Core.Parsing;
 
-using Models;
-using Models.Tokens;
-
 public sealed class Lexer(string input)
 {
+	private readonly List<Diagnostic> _errors = [];
 	private int _position;
-	private readonly List<string> _errors = [];
 
 	private char Current => _position < input.Length ? input[_position] : default;
+
+	private bool IsAtEnd => _position >= input.Length;
 
 	private char Peek(int offset = 1) =>
 		_position + offset < input.Length ? input[_position + offset] : default;
 
-	private bool IsAtEnd => _position >= input.Length;
+	private void Report(int start, int length, string message) =>
+		_errors.Add(new Diagnostic(start, length, message));
 
 	public ParseResult<IReadOnlyList<TokenBase>> Tokenize()
 	{
@@ -62,12 +64,20 @@ public sealed class Lexer(string input)
 
 	private TokenBase? SkipUnknown()
 	{
-		_errors.Add($"Unrecognised character '{Current}' at position {_position}.");
+		string message = Current switch
+		{
+			']' => "']' has no matching '['.",
+			'}' => "'}' has no matching '{'.",
+			'-' => "'-' must sit between two notes (q-w) or follow a note after a space (q -).",
+			',' => "',' must follow a note.",
+			_ => $"'{Current}' isn't a valid note, rest or symbol.",
+		};
+		Report(_position, 1, message);
 		_position++;
 		return null;
 	}
 
-	private static bool IsNoteChar(char c) => char.IsLetter(c) || char.IsDigit(c);
+	private static bool IsNoteChar(char c) => char.IsAsciiLetterOrDigit(c);
 
 	private NoteToken ReadSingleNote(DelayAfter delay = DelayAfter.None)
 	{
@@ -138,62 +148,60 @@ public sealed class Lexer(string input)
 
 	private ChordToken ReadChord()
 	{
-		int start = _position;
-		_position++;
-		List<NoteToken> notes = [];
+		(string raw, List<NoteToken> notes) = ReadGroup(']', "chord");
 
-		while (!IsAtEnd && Current != ']')
-		{
-			if (IsNoteChar(Current))
-			{
-				notes.Add(ReadSingleNote());
-			}
-			else
-			{
-				_position++;
-			}
-		}
-
-		if (Current == ']')
-		{
-			_position++;
-		}
-		else
-		{
-			_errors.Add($"Unclosed chord '[' at position {start}.");
-		}
-
-		return new ChordToken(Raw: input[start.._position], Notes: notes.AsReadOnly());
+		return new ChordToken(raw, notes.AsReadOnly());
 	}
 
 	private RollToken ReadRoll()
 	{
+		(string raw, List<NoteToken> notes) = ReadGroup('}', "roll");
+		return new RollToken(raw, notes.AsReadOnly());
+	}
+
+	private (string Raw, List<NoteToken> Notes) ReadGroup(char close, string name)
+	{
 		int start = _position;
-		_position++;
+		_position++; // opening bracket
 		List<NoteToken> notes = [];
 
-		while (!IsAtEnd && Current != '}')
+		// One typo shouldn't swallow the rest of the sheet
+		while (!IsAtEnd && Current != close && Current != '\n')
 		{
 			if (IsNoteChar(Current))
 			{
 				notes.Add(ReadSingleNote());
 			}
+			else if (char.IsWhiteSpace(Current))
+			{
+				_position++;
+			}
 			else
 			{
+				Report(
+					_position,
+					1,
+					$"'{Current}' isn't allowed inside a {name}. Only note keys (a-z, 0-9) can go between the brackets."
+				);
 				_position++;
 			}
 		}
 
-		if (Current == '}')
+		bool closed = Current == close;
+		if (closed)
 		{
 			_position++;
+			if (notes.Count == 0)
+			{
+				Report(start, _position - start, $"Empty {name}. Put at least one note inside it.");
+			}
 		}
 		else
 		{
-			_errors.Add($"Unclosed roll '{{' at position {start}.");
+			Report(start, 1, $"This {name} is never closed. Add '{close}' at the end of it.");
 		}
 
-		return new RollToken(Raw: input[start.._position], Notes: notes.AsReadOnly());
+		return (input[start.._position], notes);
 	}
 
 	private RestToken ReadRest()
