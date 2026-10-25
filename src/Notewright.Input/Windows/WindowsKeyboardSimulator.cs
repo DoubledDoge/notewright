@@ -3,9 +3,10 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using Notewright.Core.Models.Tokens;
 
 namespace Notewright.Input.Windows;
+
+using Core.Models.Tokens;
 
 [SupportedOSPlatform("windows")]
 public sealed class WindowsKeyboardSimulator : IKeyboardSimulator

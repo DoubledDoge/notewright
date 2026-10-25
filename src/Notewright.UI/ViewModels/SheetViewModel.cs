@@ -1,13 +1,14 @@
 ﻿using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Notewright.Core.Models;
-using Notewright.Core.Models.Tokens;
-using Notewright.Core.Parsing;
-using Notewright.UI.Services;
-using Notewright.UI.ViewModels.Enums;
 
 namespace Notewright.UI.ViewModels;
+
+using Core.Models;
+using Core.Models.Tokens;
+using Core.Parsing;
+using Enums;
+using Services;
 
 internal sealed partial class SheetViewModel : ObservableObject
 {

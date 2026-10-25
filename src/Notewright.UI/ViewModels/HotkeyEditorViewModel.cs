@@ -69,22 +69,13 @@ internal sealed partial class HotkeyEditorViewModel(
 	}
 
 	[RelayCommand]
-	private void Change()
-	{
-		IsChanging = !IsChanging;
-	}
+	private void Change() => IsChanging = !IsChanging;
 
 	[RelayCommand(CanExecute = nameof(CanSave))]
-	public void Save()
-	{
-		Commit(Input[0]);
-	}
+	public void Save() => Commit(Input[0]);
 
 	[RelayCommand]
-	private void Reset()
-	{
-		Commit(DefaultKey);
-	}
+	private void Reset() => Commit(DefaultKey);
 
 	private void Commit(char key)
 	{
@@ -106,11 +97,8 @@ internal sealed partial class HotkeyEditorViewModel(
 		statusBar.StatusMessage = "Preferences saved locally";
 	}
 
-	private string? FindConflict(char key)
-	{
-		return !HotkeyKeys.Supported.Contains(key)
-				? "Unsupported key. Use one of:  -  =  \\  /  ;  '  `"
-			: bindings.IsUsedByOther(action, key) ? "Already used by another hotkey."
-			: null;
-	}
+	private string? FindConflict(char key) =>
+		!HotkeyKeys.Supported.Contains(key) ? "Unsupported key. Use one of:  -  =  \\  /  ;  '  `"
+		: bindings.IsUsedByOther(action, key) ? "Already used by another hotkey."
+		: null;
 }

@@ -1,6 +1,6 @@
-﻿using Notewright.Core;
+﻿namespace Notewright.Input.Linux;
 
-namespace Notewright.Input.Linux;
+using Core;
 
 internal static class LinuxKeyCodeMap
 {

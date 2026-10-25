@@ -1,8 +1,8 @@
-using Notewright.Core;
-using Notewright.Core.Models;
-using Notewright.Core.Models.Tokens;
-
 namespace Notewright.Input;
+
+using Core;
+using Core.Models;
+using Core.Models.Tokens;
 
 public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 {

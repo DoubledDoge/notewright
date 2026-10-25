@@ -1,7 +1,7 @@
-﻿using Notewright.Input;
-using Notewright.UI.Services.Enums;
+﻿namespace Notewright.UI.Services;
 
-namespace Notewright.UI.Services;
+using Enums;
+using Input;
 
 internal sealed class HotkeyCoordinator(IGlobalHotkeyService service, HotkeyBindings bindings)
 {

@@ -1,9 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Notewright.UI.Services;
-using Notewright.UI.Services.Enums;
 
 namespace Notewright.UI.ViewModels;
+
+using Services;
+using Services.Enums;
 
 internal sealed partial class SettingsViewModel(
 	HotkeyBindings bindings,
@@ -61,7 +62,9 @@ internal sealed partial class SettingsViewModel(
 		foreach (HotkeyEditorViewModel editor in Editors)
 		{
 			if (editor.CanSave)
+			{
 				editor.Save();
+			}
 		}
 	}
 
@@ -69,7 +72,9 @@ internal sealed partial class SettingsViewModel(
 	private void Cancel()
 	{
 		foreach (HotkeyEditorViewModel editor in Editors)
+		{
 			editor.Clear();
+		}
 
 		_navigateBack();
 	}

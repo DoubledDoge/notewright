@@ -1,6 +1,6 @@
-﻿using Notewright.Core;
+﻿namespace Notewright.Input.MacOS;
 
-namespace Notewright.Input.MacOS;
+using Core;
 
 internal static class MacKeyCodeMap
 {

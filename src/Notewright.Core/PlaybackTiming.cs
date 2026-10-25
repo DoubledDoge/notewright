@@ -1,6 +1,6 @@
-﻿using Notewright.Core.Models.Tokens;
+﻿namespace Notewright.Core;
 
-namespace Notewright.Core;
+using Models.Tokens;
 
 public static class PlaybackTiming
 {

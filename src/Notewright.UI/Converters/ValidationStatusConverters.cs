@@ -1,8 +1,9 @@
 ﻿using Avalonia.Data.Converters;
 using Avalonia.Media;
-using Notewright.UI.ViewModels.Enums;
 
 namespace Notewright.UI.Converters;
+
+using ViewModels.Enums;
 
 internal static class ValidationStatusConverters
 {

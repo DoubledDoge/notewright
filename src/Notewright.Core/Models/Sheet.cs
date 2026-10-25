@@ -1,5 +1,5 @@
-﻿using Notewright.Core.Models.Tokens;
+﻿namespace Notewright.Core.Models;
 
-namespace Notewright.Core.Models;
+using Tokens;
 
 public sealed record Sheet(IReadOnlyList<TokenBase> Tokens, PlaybackConfig Config);

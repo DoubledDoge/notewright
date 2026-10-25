@@ -1,7 +1,7 @@
-using Notewright.Core.Models;
-using Notewright.Core.Models.Tokens;
-
 namespace Notewright.Core.Parsing;
+
+using Models;
+using Models.Tokens;
 
 public static class Parser
 {

@@ -1,6 +1,6 @@
-﻿using Notewright.UI.Services.Enums;
+﻿namespace Notewright.UI.Services;
 
-namespace Notewright.UI.Services;
+using Enums;
 
 internal sealed class HotkeyBindings
 {
@@ -21,8 +21,6 @@ internal sealed class HotkeyBindings
 		set => _keys[action] = value;
 	}
 
-	public bool IsUsedByOther(HotkeyAction action, char key)
-	{
-		return _keys.Any(pair => pair.Key != action && pair.Value == key);
-	}
+	public bool IsUsedByOther(HotkeyAction action, char key) =>
+		_keys.Any(pair => pair.Key != action && pair.Value == key);
 }

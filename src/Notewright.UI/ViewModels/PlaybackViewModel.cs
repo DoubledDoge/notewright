@@ -6,16 +6,17 @@ using System.Windows.Input;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Notewright.Core;
-using Notewright.Core.Models;
-using Notewright.Core.Models.Tokens;
-using Notewright.Input;
-using Notewright.UI.Services;
-using Notewright.UI.Services.Enums;
-using Notewright.UI.ViewModels.Enums;
 using Timer = System.Timers.Timer;
 
 namespace Notewright.UI.ViewModels;
+
+using Core;
+using Core.Models;
+using Core.Models.Tokens;
+using Enums;
+using Input;
+using Services;
+using Services.Enums;
 
 internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 {
@@ -107,8 +108,7 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		GC.SuppressFinalize(this);
 	}
 
-	private static void RunOnUiThread(ICommand command)
-	{
+	private static void RunOnUiThread(ICommand command) =>
 		Dispatcher.UIThread.Post(() =>
 		{
 			if (command.CanExecute(null))
@@ -116,12 +116,8 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 				command.Execute(null);
 			}
 		});
-	}
 
-	public void SetWindowActive(bool active)
-	{
-		_hotkeys.SetWindowActive(active);
-	}
+	public void SetWindowActive(bool active) => _hotkeys.SetWindowActive(active);
 
 	public void UpdateSheet(Sheet sheet)
 	{
@@ -162,13 +158,11 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		RefreshTotalDuration();
 	}
 
-	private void RefreshTotalDuration()
-	{
+	private void RefreshTotalDuration() =>
 		TotalDuration = TimeSpan.FromMilliseconds(
 			_sheetBeats * PlaybackTiming.MillisecondsPerMinute / (double)Math.Max(Bpm, 1)
 				+ _sheetFixedMs
 		);
-	}
 
 	private void RefreshBeatCount() =>
 		TotalBeats = IsManualMode ? _manualTokens.Count : Sheet?.Tokens.Count ?? 0;
