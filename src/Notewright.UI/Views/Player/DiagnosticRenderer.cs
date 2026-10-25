@@ -2,9 +2,10 @@
 using Avalonia.Media;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
-using Notewright.UI.ViewModels;
 
 namespace Notewright.UI.Views.Player;
+
+using ViewModels;
 
 internal sealed class DiagnosticRenderer : IBackgroundRenderer
 {

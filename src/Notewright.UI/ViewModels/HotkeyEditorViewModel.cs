@@ -19,7 +19,6 @@ internal sealed partial class HotkeyEditorViewModel(
 
 	public string Title { get; } = title;
 	public string Description { get; } = description;
-	public char DefaultKey => HotkeyBindings.Defaults[action];
 	public string ResetText => $"Reset to {DefaultKey}";
 
 	[ObservableProperty]
@@ -67,6 +66,8 @@ internal sealed partial class HotkeyEditorViewModel(
 		HasConflict = conflict is not null;
 		ConflictStatus = conflict ?? Available;
 	}
+
+	private char DefaultKey => HotkeyBindings.Defaults[action];
 
 	[RelayCommand]
 	private void Change() => IsChanging = !IsChanging;
