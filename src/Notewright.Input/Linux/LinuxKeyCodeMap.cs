@@ -47,13 +47,10 @@ internal static class LinuxKeyCodeMap
 		[48] = 'b',
 		[49] = 'n',
 		[50] = 'm',
-		// Special Character
-		[13] = '=',
 	};
 
 	private static readonly Dictionary<uint, char> Shifted = new()
 	{
-		// Shifted numbers
 		[2] = '!',
 		[3] = '@',
 		[5] = '$',
@@ -61,6 +58,17 @@ internal static class LinuxKeyCodeMap
 		[7] = '^',
 		[9] = '*',
 		[10] = '(',
+	};
+
+	private static readonly Dictionary<uint, char> HotkeyOnly = new()
+	{
+		[12] = '-',
+		[13] = '=',
+		[39] = ';',
+		[40] = '\'',
+		[41] = '`',
+		[43] = '\\',
+		[53] = '/',
 	};
 
 	private static readonly IReadOnlyDictionary<uint, char> UnshiftedKeyMap = VirtualPianoKeyMap
@@ -80,5 +88,8 @@ internal static class LinuxKeyCodeMap
 	internal static char ToChar(uint keyCode, bool isShifted) =>
 		isShifted
 			? ShiftedKeyMap.GetValueOrDefault(keyCode, '\0')
-			: UnshiftedKeyMap.GetValueOrDefault(keyCode, '\0');
+			: UnshiftedKeyMap.GetValueOrDefault(
+				keyCode,
+				HotkeyOnly.GetValueOrDefault(keyCode, '\0')
+			);
 }

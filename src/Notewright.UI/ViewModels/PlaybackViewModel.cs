@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Timers;
+using System.Windows.Input;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,6 +10,7 @@ using Notewright.Core.Models;
 using Notewright.Core.Models.Tokens;
 using Notewright.Input;
 using Notewright.UI.Services;
+using Notewright.UI.Services.Enums;
 using Notewright.UI.ViewModels.Enums;
 using Timer = System.Timers.Timer;
 
@@ -16,28 +18,30 @@ namespace Notewright.UI.ViewModels;
 
 internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 {
-	private readonly HotkeyBindings _bindings;
+	private const string ManualReadyText = "Manual mode · Press hotkey to advance";
 	private readonly Timer _elapsedTimer;
-	private readonly IGlobalHotkeyService _hotkeyService;
+	private readonly HotkeyCoordinator _hotkeys;
 	private readonly IKeyboardSimulator _simulator;
-	private bool _autoHotkeyRegistered;
 	private CancellationTokenSource? _cts;
 	private TimeSpan _elapsedBeforePause;
 	private int _manualBeatIndex;
 	private IReadOnlyList<TokenBase> _manualTokens = [];
 	private DateTime _playbackStarted;
+	private int _resumeIndex;
+	private double _sheetBeats;
+	private double _sheetFixedMs;
 
-	public PlaybackViewModel(
-		IKeyboardSimulator simulator,
-		IGlobalHotkeyService hotkeyService,
-		HotkeyBindings bindings
-	)
+	public PlaybackViewModel(IKeyboardSimulator simulator, HotkeyCoordinator hotkeys)
 	{
 		_simulator = simulator;
-		_hotkeyService = hotkeyService;
-		_bindings = bindings;
+		_hotkeys = hotkeys;
 		_elapsedTimer = new Timer(100) { AutoReset = true };
 		_elapsedTimer.Elapsed += OnElapsedTimerTick;
+
+		hotkeys.Add(HotkeyAction.Advance, HotkeyModes.Manual, OnManualBeatPressed);
+		hotkeys.Add(HotkeyAction.Play, HotkeyModes.Automated, () => RunOnUiThread(PlayCommand));
+		hotkeys.Add(HotkeyAction.Pause, HotkeyModes.Automated, () => RunOnUiThread(PauseCommand));
+		hotkeys.Add(HotkeyAction.Stop, HotkeyModes.Both, () => RunOnUiThread(StopCommand));
 	}
 
 	[
@@ -57,7 +61,10 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 	[ObservableProperty, NotifyCanExecuteChangedFor(nameof(PlayCommand))]
 	private partial Sheet? Sheet { get; set; }
 
-	[ObservableProperty, NotifyPropertyChangedFor(nameof(ManualModeToggleText))]
+	[ObservableProperty]
+	[NotifyPropertyChangedFor(nameof(ManualModeToggleText))]
+	[NotifyCanExecuteChangedFor(nameof(PlayCommand))]
+	[NotifyCanExecuteChangedFor(nameof(StopCommand))]
 	public partial bool IsManualMode { get; set; }
 
 	[ObservableProperty, NotifyPropertyChangedFor(nameof(ElapsedTimeFormatted))]
@@ -85,9 +92,11 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 
 	public string ManualModeToggleText => IsManualMode ? "Switch to auto" : "Switch to manual";
 
-	private bool CanPlay => Status == PlaybackStatus.Idle && Sheet is not null;
+	private bool CanPlay => Status != PlaybackStatus.Playing && Sheet is not null && !IsManualMode;
 	private bool CanPause => Status == PlaybackStatus.Playing;
-	private bool CanStop => Status is PlaybackStatus.Playing or PlaybackStatus.Paused;
+
+	private bool CanStop =>
+		Status is PlaybackStatus.Playing or PlaybackStatus.Paused || IsManualMode;
 
 	public void Dispose()
 	{
@@ -97,117 +106,90 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		GC.SuppressFinalize(this);
 	}
 
+	private static void RunOnUiThread(ICommand command)
+	{
+		Dispatcher.UIThread.Post(() =>
+		{
+			if (command.CanExecute(null))
+				command.Execute(null);
+		});
+	}
+
+	public void SetWindowActive(bool active)
+	{
+		_hotkeys.SetWindowActive(active);
+	}
+
 	public void UpdateSheet(Sheet sheet)
 	{
 		ArgumentNullException.ThrowIfNull(sheet);
-		Debug.WriteLine($"Sheet updated: {sheet.Tokens.Count} tokens");
 		Sheet = sheet;
 		_manualTokens = [.. sheet.Tokens.Where(t => t is not RestToken)];
-		_manualBeatIndex = 0;
+
+		_sheetBeats = 0;
+		_sheetFixedMs = 0;
+		foreach (TokenBase token in sheet.Tokens)
+		{
+			(double beats, double fixedMs) = PlaybackTiming.Measure(token);
+			_sheetBeats += beats;
+			_sheetFixedMs += fixedMs;
+		}
+
 		RefreshBeatCount();
-		TotalDuration = CalculateTotalDuration(sheet);
-		CurrentBeat = 0;
-		ElapsedTime = TimeSpan.Zero;
-		StatusText = $"Ready · Beat 1 of {TotalBeats}";
+		RefreshTotalDuration();
+		_cts?.Cancel();
+		ResetProgress();
 	}
 
 	public void ClearSheet()
 	{
 		Sheet = null;
-		TotalBeats = 0;
-		TotalDuration = TimeSpan.Zero;
-		CurrentBeat = 0;
-		ElapsedTime = TimeSpan.Zero;
 		_manualTokens = [];
-		_manualBeatIndex = 0;
-		StatusText = "Ready";
+		_sheetBeats = 0;
+		_sheetFixedMs = 0;
+		RefreshBeatCount();
+		RefreshTotalDuration();
+		_cts?.Cancel();
+		ResetProgress();
 		PlayCommand.NotifyCanExecuteChanged();
 	}
 
-	public void SetAutoHotkeyActive(bool active)
+	partial void OnBpmChanged(decimal value)
 	{
-		if (active == _autoHotkeyRegistered)
-		{
-			return; // WindowsHotkeyService leaks an OS registration on double Register
-		}
-
-		_autoHotkeyRegistered = active;
-
-		if (active)
-		{
-			_hotkeyService.Register(_bindings.Auto, OnAutoHotkeyPressed);
-		}
-		else
-		{
-			_hotkeyService.Unregister(_bindings.Auto);
-		}
+		RefreshTotalDuration();
 	}
 
-	private void OnAutoHotkeyPressed() =>
-		Dispatcher.UIThread.Post(() =>
-		{
-			if (IsManualMode)
-			{
-				IsManualMode = false; // starting auto leaves manual mode
-			}
-
-			if (PlayCommand.CanExecute(null))
-			{
-				PlayCommand.Execute(null);
-			}
-		});
-
-	public void RebindManualHotkey(char oldKey, char newKey)
+	private void RefreshTotalDuration()
 	{
-		if (!IsManualMode)
-		{
-			return;
-		}
-
-		_hotkeyService.Unregister(oldKey);
-		_hotkeyService.Register(newKey, OnManualBeatPressed);
+		TotalDuration = TimeSpan.FromMilliseconds(
+			_sheetBeats * PlaybackTiming.MillisecondsPerMinute / (double)Math.Max(Bpm, 1)
+				+ _sheetFixedMs
+		);
 	}
 
 	private void RefreshBeatCount() =>
 		TotalBeats = IsManualMode ? _manualTokens.Count : Sheet?.Tokens.Count ?? 0;
 
-	private TimeSpan CalculateTotalDuration(Sheet sheet)
-	{
-		double msPerBeat = 60000.0 / (double)Bpm;
-		double totalMs = sheet.Tokens.Sum(token =>
-			token switch
-			{
-				RestToken rest => msPerBeat * rest.Units,
-				LegatoRunToken legato => msPerBeat / 4.0 * legato.Notes.Count,
-				RollToken roll => roll.Notes.Count + msPerBeat,
-				_ => msPerBeat,
-			}
-		);
-
-		return TimeSpan.FromMilliseconds(totalMs);
-	}
-
 	private void OnElapsedTimerTick(object? sender, ElapsedEventArgs e) =>
 		Dispatcher.UIThread.Post(() =>
 		{
+			if (Status != PlaybackStatus.Playing)
+				return;
+
 			ElapsedTime = _elapsedBeforePause + (DateTime.UtcNow - _playbackStarted);
 			StatusText = $"Playing · Beat {CurrentBeat} of {TotalBeats}";
 		});
 
 	partial void OnIsManualModeChanged(bool value)
 	{
+		_hotkeys.SetManualMode(value);
 		RefreshBeatCount();
-		OnPropertyChanged(nameof(ManualModeToggleText));
+		_cts?.Cancel(); // leaving automated mode ends any run in progress
+		ResetProgress();
 
 		if (value)
 		{
-			_hotkeyService.Register(_bindings.Manual, OnManualBeatPressed);
-			StatusText = "Manual mode · Press hotkey to advance";
-		}
-		else
-		{
-			_hotkeyService.Unregister(_bindings.Manual);
-			StatusText = Sheet is not null ? $"Ready · Beat 1 of {TotalBeats}" : "Ready";
+			StatusText = ManualReadyText;
 		}
 	}
 
@@ -259,11 +241,13 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 	[RelayCommand(CanExecute = nameof(CanPlay))]
 	private async Task PlayAsync()
 	{
-		if (Sheet is null)
+		Sheet? sheet = Sheet;
+		if (sheet is null)
 		{
 			return;
 		}
 
+		_cts?.Dispose();
 		_cts = new CancellationTokenSource();
 		Status = PlaybackStatus.Playing;
 		_playbackStarted = DateTime.UtcNow;
@@ -272,20 +256,56 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		try
 		{
 			PlaybackEngine engine = new(_simulator);
-			await engine.PlayAsync(Sheet, _cts.Token).ConfigureAwait(true);
-			Status = PlaybackStatus.Idle;
-			ElapsedTime = TimeSpan.Zero;
-			CurrentBeat = 0;
-			StatusText = $"Ready · Beat 1 of {TotalBeats}";
+			await engine
+				.PlayAsync(sheet, () => CurrentConfig, _resumeIndex, OnTokenStarted, _cts.Token)
+				.ConfigureAwait(true);
+			ResetProgress(); // reached the end
 		}
 		catch (OperationCanceledException)
 		{
-			Status = PlaybackStatus.Idle;
+			// Pause() and Stop() have already set the status
 		}
 		finally
 		{
 			_elapsedTimer.Stop();
 		}
+	}
+
+	[RelayCommand(CanExecute = nameof(CanPause))]
+	private void Pause()
+	{
+		_elapsedBeforePause += DateTime.UtcNow - _playbackStarted;
+		ElapsedTime = _elapsedBeforePause;
+		Status = PlaybackStatus.Paused;
+		StatusText = $"Paused · Beat {CurrentBeat} of {TotalBeats}";
+		_cts?.Cancel();
+	}
+
+	[RelayCommand(CanExecute = nameof(CanStop))]
+	private void Stop()
+	{
+		_cts?.Cancel();
+		ResetProgress();
+
+		if (IsManualMode)
+			StatusText = ManualReadyText;
+	}
+
+	private void OnTokenStarted(int index)
+	{
+		_resumeIndex = index + 1;
+		CurrentBeat = index + 1; // auto mode never advanced this before
+	}
+
+	private void ResetProgress()
+	{
+		_resumeIndex = 0;
+		_manualBeatIndex = 0;
+		_elapsedBeforePause = TimeSpan.Zero;
+		ElapsedTime = TimeSpan.Zero;
+		CurrentBeat = 0;
+		Status = PlaybackStatus.Idle;
+		StatusText = Sheet is null ? "Ready" : $"Ready · Beat 1 of {TotalBeats}";
 	}
 
 	[RelayCommand]

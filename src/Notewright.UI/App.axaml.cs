@@ -31,7 +31,8 @@ internal sealed class App : Application
 			{
 				simulator = SimulatorFactory.CreateKeyboardSimulator();
 				hotkeyService = SimulatorFactory.CreateHotkeyService();
-				playbackViewModel = new(simulator, hotkeyService, bindings);
+				HotkeyCoordinator hotkeys = new(hotkeyService, bindings);
+				playbackViewModel = new(simulator, hotkeys);
 
 				StatusBarViewModel statusBarViewModel = new();
 				MainWindow mainWindow = new();
@@ -43,10 +44,9 @@ internal sealed class App : Application
 				);
 
 				SettingsViewModel settingsViewModel = new(
-					hotkeyService,
-					playbackViewModel,
-					statusBarViewModel,
 					bindings,
+					hotkeys,
+					statusBarViewModel,
 					() => { }
 				);
 

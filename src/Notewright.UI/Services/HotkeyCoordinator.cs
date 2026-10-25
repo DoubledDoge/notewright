@@ -37,7 +37,9 @@ internal sealed class HotkeyCoordinator(IGlobalHotkeyService service, HotkeyBind
 	private void SyncAll()
 	{
 		foreach (HotkeyAction action in _actions.Keys)
+		{
 			Sync(action);
+		}
 	}
 
 	private void Sync(HotkeyAction action)
@@ -51,14 +53,18 @@ internal sealed class HotkeyCoordinator(IGlobalHotkeyService service, HotkeyBind
 		if (_registered.TryGetValue(action, out char registeredKey))
 		{
 			if (wanted && registeredKey == key)
+			{
 				return;
+			}
 
 			service.Unregister(registeredKey);
 			_registered.Remove(action);
 		}
 
 		if (!wanted)
+		{
 			return;
+		}
 
 		service.Register(key, handler);
 		_registered[action] = key;

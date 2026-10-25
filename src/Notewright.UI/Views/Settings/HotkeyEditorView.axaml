@@ -1,0 +1,97 @@
+﻿<UserControl
+	xmlns="https://github.com/avaloniaui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:vm="clr-namespace:Notewright.UI.ViewModels"
+	mc:Ignorable="d"
+	d:DesignWidth="800"
+	d:DesignHeight="450"
+	x:Class="Notewright.UI.Views.Settings.HotkeyEditorView"
+	x:DataType="vm:HotkeyEditorViewModel"
+>
+	<Border
+		Background="#141414"
+		BorderBrush="#2a2a2a"
+		BorderThickness="1"
+		CornerRadius="8"
+		Padding="16"
+	>
+		<StackPanel Spacing="12">
+			<TextBlock Text="{Binding Title}" Foreground="#cccccc" FontSize="13" FontWeight="SemiBold" />
+			<TextBlock Text="{Binding Description}" Foreground="#555555" FontSize="11" />
+
+			<Border
+				Background="#1a1a1a"
+				BorderBrush="#2a2a2a"
+				BorderThickness="1"
+				CornerRadius="6"
+				Padding="16"
+			>
+				<DockPanel>
+					<StackPanel DockPanel.Dock="Right" Spacing="4">
+						<Button Command="{Binding ChangeCommand}" Classes="secondary">✏ Change hotkey</Button>
+						<StackPanel Orientation="Horizontal" Spacing="4">
+							<Ellipse
+								Width="6"
+								Height="6"
+								Fill="#4ade80"
+								VerticalAlignment="Center"
+								IsVisible="{Binding !HasConflict}"
+							/>
+							<Ellipse
+								Width="6"
+								Height="6"
+								Fill="#f87171"
+								VerticalAlignment="Center"
+								IsVisible="{Binding HasConflict}"
+							/>
+							<TextBlock
+								Text="{Binding ConflictStatus}"
+								Foreground="#555555"
+								FontSize="11"
+								VerticalAlignment="Center"
+							/>
+						</StackPanel>
+					</StackPanel>
+
+					<StackPanel Spacing="4">
+						<TextBlock
+							Text="CURRENT HOTKEY"
+							Foreground="#444444"
+							FontSize="10"
+							FontWeight="SemiBold"
+						/>
+						<Border Background="#2a2a2a" CornerRadius="6" Padding="16,8" HorizontalAlignment="Left">
+							<TextBlock
+								Text="{Binding CurrentKey}"
+								Foreground="#ffffff"
+								FontSize="20"
+								FontWeight="Bold"
+								FontFamily="Courier New"
+							/>
+						</Border>
+					</StackPanel>
+				</DockPanel>
+			</Border>
+
+			<StackPanel Spacing="8" IsVisible="{Binding 	IsChanging}">
+				<TextBox
+					Text="{Binding 	Input, UpdateSourceTrigger=PropertyChanged}"
+					PlaceholderText="Press a key..."
+					MaxLength="1"
+					Background="#1a1a1a"
+					Foreground="#cccccc"
+					BorderBrush="#2a2a2a"
+				/>
+			</StackPanel>
+
+			<Button
+				Command="{Binding 	ResetCommand}"
+				Content="{Binding ResetText}"
+				Classes="ghost"
+				HorizontalAlignment="Right"
+			/>
+		</StackPanel>
+	</Border>
+</UserControl>

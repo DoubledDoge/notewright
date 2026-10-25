@@ -7,8 +7,8 @@ internal sealed partial class MainWindow : Window
 {
 	public MainWindow()
 	{
-		Activated += (_, _) => Playback?.SetAutoHotkeyActive(false);
-		Deactivated += (_, _) => Playback?.SetAutoHotkeyActive(true);
+		Activated += (_, _) => Playback?.SetWindowActive(true);
+		Deactivated += (_, _) => Playback?.SetWindowActive(false);
 
 		InitializeComponent();
 	}

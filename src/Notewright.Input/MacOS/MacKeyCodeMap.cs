@@ -53,6 +53,12 @@ internal static class MacKeyCodeMap
 		['*'] = 28,
 		['('] = 25,
 		['='] = 24,
+		['-'] = 27,
+		[';'] = 41,
+		['\''] = 39,
+		['`'] = 50,
+		['\\'] = 42,
+		['/'] = 44,
 	};
 
 	private static readonly Dictionary<ushort, char> UnshiftedByCode = RawKeyCodes

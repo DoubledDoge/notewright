@@ -4,6 +4,7 @@
 	xmlns:vm="using:Notewright.UI.ViewModels"
 	x:Class="Notewright.UI.Views.Settings.HotkeySettingsView"
 	x:DataType="vm:SettingsViewModel"
+	xmlns:settings="using:Notewright.UI.Views.Settings"
 >
 	<Grid RowDefinitions="*,Auto">
 		<ScrollViewer Grid.Row="0" Padding="24">
@@ -16,116 +17,25 @@
 						FontWeight="Bold"
 					/>
 					<TextBlock
-						Text="Make manual playback feel natural. Set the key that moves your music forward."
+						Text="Choose the keys that control playback. Each key works only in the mode noted beneath it, and only while Notewright isn’t the focused window."
 						Foreground="#666666"
 						FontSize="12"
 						TextWrapping="Wrap"
 					/>
 				</StackPanel>
 
-				<Border
-					Background="#141414"
-					BorderBrush="#2a2a2a"
-					BorderThickness="1"
-					CornerRadius="8"
-					Padding="16"
-				>
-					<StackPanel Spacing="12">
-						<TextBlock
-							Text="Play next chord"
-							Foreground="#cccccc"
-							FontSize="13"
-							FontWeight="SemiBold"
-						/>
-						<TextBlock Text="Manual mode hotkey" Foreground="#555555" FontSize="11" />
-
-						<Border
-							Background="#1a1a1a"
-							BorderBrush="#2a2a2a"
-							BorderThickness="1"
-							CornerRadius="6"
-							Padding="16"
-						>
-							<DockPanel>
-								<StackPanel DockPanel.Dock="Right" Spacing="4">
-									<Button Command="{Binding ChangeHotkeyCommand}" Classes="secondary">
-										✏ Change hotkey
-									</Button>
-									<StackPanel Orientation="Horizontal" Spacing="4">
-										<Ellipse
-											Width="6"
-											Height="6"
-											Fill="#4ade80"
-											VerticalAlignment="Center"
-											IsVisible="{Binding !HasConflict}"
-										/>
-										<Ellipse
-											Width="6"
-											Height="6"
-											Fill="#f87171"
-											VerticalAlignment="Center"
-											IsVisible="{Binding HasConflict}"
-										/>
-										<TextBlock
-											Text="{Binding ConflictStatus}"
-											Foreground="#555555"
-											FontSize="11"
-											VerticalAlignment="Center"
-										/>
-									</StackPanel>
-								</StackPanel>
-
-								<StackPanel Spacing="4">
-									<TextBlock
-										Text="CURRENT HOTKEY"
-										Foreground="#444444"
-										FontSize="10"
-										FontWeight="SemiBold"
-									/>
-									<Border
-										Background="#2a2a2a"
-										CornerRadius="6"
-										Padding="16,8"
-										HorizontalAlignment="Left"
-									>
-										<TextBlock
-											Text="{Binding CurrentManualHotkey}"
-											Foreground="#ffffff"
-											FontSize="20"
-											FontWeight="Bold"
-											FontFamily="Courier New"
-										/>
-									</Border>
-								</StackPanel>
-							</DockPanel>
-						</Border>
-
-						<StackPanel Spacing="8" IsVisible="{Binding IsChangingHotkey}">
-							<TextBox
-								Text="{Binding ManualHotkeyInput, UpdateSourceTrigger=PropertyChanged}"
-								PlaceholderText="Press a key..."
-								MaxLength="1"
-								Background="#1a1a1a"
-								Foreground="#cccccc"
-								BorderBrush="#2a2a2a"
-							/>
-							<TextBlock
-								Text="{Binding HotkeyErrorMessage}"
-								Foreground="#f87171"
-								FontSize="11"
-								IsVisible="{Binding HotkeyErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-							/>
-						</StackPanel>
-
-						<Button
-							Command="{Binding ResetHotkeyCommand}"
-							Classes="ghost"
-							HorizontalAlignment="Right"
-						>
-							Reset to =
-						</Button>
-					</StackPanel>
-				</Border>
+				<ItemsControl ItemsSource="{Binding Editors}">
+					<ItemsControl.ItemsPanel>
+						<ItemsPanelTemplate>
+							<StackPanel Spacing="16" />
+						</ItemsPanelTemplate>
+					</ItemsControl.ItemsPanel>
+					<ItemsControl.ItemTemplate>
+						<DataTemplate x:DataType="vm:HotkeyEditorViewModel">
+							<settings:HotkeyEditorView />
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
 			</StackPanel>
 		</ScrollViewer>
 
@@ -143,7 +53,7 @@
 
 				<StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
 					<Button Command="{Binding CancelCommand}" Classes="secondary">Cancel</Button>
-					<Button Command="{Binding SaveHotkeyCommand}" Classes="primary">✓ Save changes</Button>
+					<Button Command="{Binding SaveAllCommand}" Classes="primary">✓ Save changes</Button>
 				</StackPanel>
 
 				<StackPanel
