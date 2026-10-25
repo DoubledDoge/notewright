@@ -166,6 +166,19 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		PlayCommand.NotifyCanExecuteChanged();
 	}
 
+	public void Restore(int? bpm, int? transposition)
+	{
+		if (bpm is { } b)
+		{
+			Bpm = Math.Clamp(b, (int)MinBpm, (int)MaxBpm);
+		}
+
+		if (transposition is { } t)
+		{
+			Transposition = Math.Clamp(t, (int)MinTransposition, (int)MaxTransposition);
+		}
+	}
+
 	partial void OnBpmChanged(decimal value)
 	{
 		BpmText = FormatBpm(value);

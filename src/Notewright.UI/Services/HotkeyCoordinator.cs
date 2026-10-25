@@ -7,6 +7,7 @@ internal sealed class HotkeyCoordinator(IGlobalHotkeyService service, HotkeyBind
 {
 	private readonly Dictionary<HotkeyAction, (HotkeyModes Modes, Action Handler)> _actions = [];
 	private readonly Dictionary<HotkeyAction, char> _registered = [];
+	public event EventHandler? BindingsChanged;
 	private bool _manualMode;
 	private bool _windowActive = true; // the window is focused at launch
 
@@ -32,6 +33,7 @@ internal sealed class HotkeyCoordinator(IGlobalHotkeyService service, HotkeyBind
 	{
 		bindings[action] = key;
 		Sync(action);
+		BindingsChanged?.Invoke(this, EventArgs.Empty);
 	}
 
 	private void SyncAll()

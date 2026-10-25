@@ -7,9 +7,11 @@ namespace Notewright.UI;
 
 using Input;
 using Services;
+using Services.Enums;
 using ViewModels;
 using Views;
 
+[SuppressMessage("ReSharper", "AccessToDisposedClosure")]
 internal sealed class App : Application
 {
 	public override void Initialize() => AvaloniaXamlLoader.Load(this);
@@ -27,6 +29,9 @@ internal sealed class App : Application
 			IGlobalHotkeyService? hotkeyService = null;
 			PlaybackViewModel? playbackViewModel = null;
 			HotkeyBindings bindings = new();
+			SettingsStore settingsStore = new();
+			AppSettings saved = settingsStore.Load();
+			bindings.Apply(saved.Hotkeys);
 
 			try
 			{
@@ -34,6 +39,31 @@ internal sealed class App : Application
 				hotkeyService = SimulatorFactory.CreateHotkeyService();
 				HotkeyCoordinator hotkeys = new(hotkeyService, bindings);
 				playbackViewModel = new(simulator, hotkeys);
+
+				playbackViewModel.Restore(saved.Bpm, saved.Transposition);
+
+				settingsStore.Attach(() =>
+					new AppSettings
+					{
+						Hotkeys = new Dictionary<HotkeyAction, char>(bindings.Snapshot()),
+						Bpm = (int)playbackViewModel.Bpm,
+						Transposition = (int)playbackViewModel.Transposition,
+					}
+				);
+
+				// loading doesn't trigger a pointless save
+				hotkeys.BindingsChanged += (_, _) => settingsStore.RequestSave();
+				playbackViewModel.PropertyChanged += (_, e) =>
+				{
+					if (
+						e.PropertyName
+						is nameof(PlaybackViewModel.Bpm)
+							or nameof(PlaybackViewModel.Transposition)
+					)
+					{
+						settingsStore.RequestSave();
+					}
+				};
 
 				StatusBarViewModel statusBarViewModel = new();
 				MainWindow mainWindow = new();
@@ -65,6 +95,7 @@ internal sealed class App : Application
 
 				desktop.ShutdownRequested += (_, _) =>
 				{
+					settingsStore.Flush();
 					playbackViewModel.Dispose();
 					simulator.Dispose();
 					hotkeyService.Dispose();
