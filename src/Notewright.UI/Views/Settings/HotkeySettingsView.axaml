@@ -126,59 +126,6 @@
 						</Button>
 					</StackPanel>
 				</Border>
-
-				<Border
-					Background="#141414"
-					BorderBrush="#2a2a2a"
-					BorderThickness="1"
-					CornerRadius="8"
-					Padding="16"
-				>
-					<StackPanel Spacing="12">
-						<DockPanel>
-							<TextBlock
-								DockPanel.Dock="Right"
-								Text="Same sheet. Your rhythm."
-								Foreground="#444444"
-								FontSize="11"
-								VerticalAlignment="Center"
-							/>
-							<TextBlock
-								Text="One press. One step."
-								Foreground="#cccccc"
-								FontSize="13"
-								FontWeight="SemiBold"
-							/>
-						</DockPanel>
-
-						<Border Background="#1a1a1a" CornerRadius="6" Padding="12,8">
-							<DockPanel>
-								<Border DockPanel.Dock="Right" Background="#2a2a2a" CornerRadius="4" Padding="8,4">
-									<TextBlock
-										Text="{Binding CurrentManualHotkey}"
-										Foreground="#ffffff"
-										FontFamily="Courier New"
-										FontSize="13"
-										FontWeight="Bold"
-									/>
-								</Border>
-								<TextBlock
-									Text="Press to advance"
-									Foreground="#555555"
-									FontSize="11"
-									VerticalAlignment="Center"
-								/>
-							</DockPanel>
-						</Border>
-
-						<TextBlock
-							Text="The hotkey plays the next note or chord in your sheet. You control the pace; automated playback is unaffected."
-							Foreground="#555555"
-							FontSize="11"
-							TextWrapping="Wrap"
-						/>
-					</StackPanel>
-				</Border>
 			</StackPanel>
 		</ScrollViewer>
 

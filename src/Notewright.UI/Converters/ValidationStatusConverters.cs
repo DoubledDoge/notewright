@@ -1,21 +1,11 @@
 ﻿using Avalonia.Data.Converters;
 using Avalonia.Media;
+using Notewright.UI.ViewModels.Enums;
 
 namespace Notewright.UI.Converters;
 
-using ViewModels.Enums;
-
 internal static class ValidationStatusConverters
 {
-	public static readonly IValueConverter IsValid = new FuncValueConverter<ValidationStatus, bool>(
-		v => v == ValidationStatus.Valid
-	);
-
-	public static readonly IValueConverter IsInvalid = new FuncValueConverter<
-		ValidationStatus,
-		bool
-	>(v => v == ValidationStatus.Invalid);
-
 	public static readonly IValueConverter ToStatusText = new FuncValueConverter<
 		ValidationStatus,
 		string
