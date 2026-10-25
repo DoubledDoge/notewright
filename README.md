@@ -191,5 +191,5 @@ Released under the [MIT License](LICENSE).
 Special thanks for the following websites for guiding me around the keyboard piano syntax:
 
 - [Virtual Piano](https://virtualpiano.net/) - First and closest source of general piano playing. My most definitive pick.
-- [PlayPianoSheets](https://playpianosheets.com/) - Meant for Roblox (funnily enough) and has minor syntax differences but an excellent source for songs.
+- [PlayPianoSheets](https://playpianosheets.com/) - Meant for Roblox (funnily enough) and has minor syntax differences but is an excellent source for songs.
 
