@@ -33,6 +33,11 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 	private double _sheetBeats;
 	private double _sheetFixedMs;
 
+	private const decimal MinBpm = 20;
+	private const decimal MaxBpm = 300;
+	private const decimal MinTransposition = -12;
+	private const decimal MaxTransposition = 12;
+
 	public PlaybackViewModel(IKeyboardSimulator simulator, HotkeyCoordinator hotkeys)
 	{
 		_simulator = simulator;
@@ -59,6 +64,12 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 
 	[ObservableProperty]
 	public partial decimal Transposition { get; set; }
+
+	[ObservableProperty]
+	public partial string BpmText { get; set; } = "120";
+
+	[ObservableProperty]
+	public partial string TranspositionText { get; set; } = "+0";
 
 	[ObservableProperty, NotifyCanExecuteChangedFor(nameof(PlayCommand))]
 	private partial Sheet? Sheet { get; set; }
@@ -155,8 +166,14 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		PlayCommand.NotifyCanExecuteChanged();
 	}
 
-	// ReSharper disable once UnusedParameterInPartialMethod
-	partial void OnBpmChanged(decimal value) => RefreshTotalDuration();
+	partial void OnBpmChanged(decimal value)
+	{
+		BpmText = FormatBpm(value);
+		RefreshTotalDuration();
+	}
+
+	partial void OnTranspositionChanged(decimal value) =>
+		TranspositionText = FormatTransposition(value);
 
 	private void RefreshTotalDuration() =>
 		TotalDuration = TimeSpan.FromMilliseconds(
@@ -310,16 +327,53 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 	}
 
 	[RelayCommand]
-	private void IncrementBpm() => Bpm = Math.Min(300, Bpm + 1);
+	private void CommitBpm()
+	{
+		Bpm = ParseClamped(BpmText, Bpm, MinBpm, MaxBpm);
+		BpmText = FormatBpm(Bpm); // potentially snaps the box back
+	}
 
 	[RelayCommand]
-	private void DecrementBpm() => Bpm = Math.Max(20, Bpm - 1);
+	private void CommitTransposition()
+	{
+		Transposition = ParseClamped(
+			TranspositionText,
+			Transposition,
+			MinTransposition,
+			MaxTransposition
+		);
+		TranspositionText = FormatTransposition(Transposition);
+	}
+
+	private static decimal ParseClamped(string? text, decimal fallback, decimal min, decimal max) =>
+		decimal.TryParse(
+			text?.Trim(),
+			NumberStyles.AllowLeadingSign,
+			CultureInfo.InvariantCulture,
+			out decimal value
+		)
+			? Math.Clamp(value, min, max)
+			: fallback;
+
+	private static string FormatBpm(decimal value) =>
+		value.ToString("0", CultureInfo.InvariantCulture);
+
+	private static string FormatTransposition(decimal value) =>
+		value.ToString("+0;-0;+0", CultureInfo.InvariantCulture);
 
 	[RelayCommand]
-	private void IncrementTransposition() => Transposition = Math.Min(12, Transposition + 1);
+	private void IncrementBpm() => Bpm = Math.Min(MaxBpm, Bpm + 1);
 
 	[RelayCommand]
-	private void DecrementTransposition() => Transposition = Math.Max(-12, Transposition - 1);
+	private void DecrementBpm() => Bpm = Math.Max(MinBpm, Bpm - 1);
+
+	[RelayCommand]
+	private void IncrementTransposition() =>
+		Transposition = Math.Min(MaxTransposition, Transposition + 1);
+
+	[RelayCommand]
+	private void DecrementTransposition() =>
+		Transposition = Math.Max(MinTransposition, Transposition - 1);
 
 	[RelayCommand]
 	private void ToggleManualMode() => IsManualMode = !IsManualMode;

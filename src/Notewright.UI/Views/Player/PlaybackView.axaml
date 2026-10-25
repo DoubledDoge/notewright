@@ -59,14 +59,13 @@
 						<StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
 							<Button Classes="control" Content="-" Command="{Binding DecrementBpmCommand}" />
 							<StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
-								<TextBlock
-									Text="{Binding Bpm}"
-									Foreground="#ffffff"
-									FontSize="20"
-									FontWeight="Bold"
-									VerticalAlignment="Center"
-									MinWidth="36"
-									TextAlignment="Center"
+								<TextBox
+									Classes="value"
+									Text="{Binding BpmText, UpdateSourceTrigger=PropertyChanged}"
+									MaxLength="3"
+									GotFocus="OnValueGotFocus"
+									LostFocus="OnBpmLostFocus"
+									KeyDown="OnBpmKeyDown"
 								/>
 								<TextBlock
 									Text="BPM"
@@ -89,14 +88,13 @@
 								Command="{Binding DecrementTranspositionCommand}"
 							/>
 							<StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
-								<TextBlock
-									Text="{Binding Transposition, StringFormat='+#;-#;+0'}"
-									Foreground="#ffffff"
-									FontSize="20"
-									FontWeight="Bold"
-									VerticalAlignment="Center"
-									MinWidth="36"
-									TextAlignment="Center"
+								<TextBox
+									Classes="value"
+									Text="{Binding TranspositionText, UpdateSourceTrigger=PropertyChanged}"
+									MaxLength="3"
+									GotFocus="OnValueGotFocus"
+									LostFocus="OnTranspositionLostFocus"
+									KeyDown="OnTranspositionKeyDown"
 								/>
 								<TextBlock
 									Text="st"

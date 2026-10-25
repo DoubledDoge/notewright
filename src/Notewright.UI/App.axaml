@@ -67,5 +67,30 @@
 			<Setter Property="BorderThickness" Value="0" />
 			<Setter Property="MinWidth" Value="24" />
 		</Style>
+
+		<Style Selector="TextBox.value">
+			<Setter Property="Foreground" Value="#ffffff" />
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="BorderBrush" Value="#2a2a2a" />
+			<Setter Property="BorderThickness" Value="0,0,0,1" />
+			<Setter Property="CornerRadius" Value="0" />
+			<Setter Property="FontSize" Value="20" />
+			<Setter Property="FontWeight" Value="Bold" />
+			<Setter Property="MinWidth" Value="48" />
+			<Setter Property="MinHeight" Value="0" />
+			<Setter Property="Padding" Value="0,0,0,2" />
+			<Setter Property="TextAlignment" Value="Center" />
+			<Setter Property="HorizontalContentAlignment" Value="Center" />
+			<Setter Property="VerticalContentAlignment" Value="Center" />
+		</Style>
+
+		<Style Selector="TextBox.value:pointerover /template/ Border#PART_BorderElement, TextBox.value:focus /template/ Border#PART_BorderElement">
+			<Setter Property="Background" Value="Transparent" />
+			<Setter Property="BorderThickness" Value="0,0,0,1" />
+		</Style>
+
+		<Style Selector="TextBox.value:focus /template/ Border#PART_BorderElement">
+			<Setter Property="BorderBrush" Value="#4ade80" />
+		</Style>
 	</Application.Styles>
 </Application>
