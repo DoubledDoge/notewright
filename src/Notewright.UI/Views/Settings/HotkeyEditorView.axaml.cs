@@ -8,10 +8,7 @@ namespace Notewright.UI.Views.Settings;
 	"CA1812:Avoid uninstantiated internal classes",
 	Justification = "Instantiated by Avalonia's XAML loader at runtime."
 )]
-internal partial class HotkeyEditorView : UserControl
+internal sealed partial class HotkeyEditorView : UserControl
 {
-	public HotkeyEditorView()
-	{
-		InitializeComponent();
-	}
+	public HotkeyEditorView() => InitializeComponent();
 }

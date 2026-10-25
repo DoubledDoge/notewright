@@ -63,10 +63,12 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 	[ObservableProperty, NotifyCanExecuteChangedFor(nameof(PlayCommand))]
 	private partial Sheet? Sheet { get; set; }
 
-	[ObservableProperty]
-	[NotifyPropertyChangedFor(nameof(ManualModeToggleText))]
-	[NotifyCanExecuteChangedFor(nameof(PlayCommand))]
-	[NotifyCanExecuteChangedFor(nameof(StopCommand))]
+	[
+		ObservableProperty,
+		NotifyPropertyChangedFor(nameof(ManualModeToggleText)),
+		NotifyCanExecuteChangedFor(nameof(PlayCommand)),
+		NotifyCanExecuteChangedFor(nameof(StopCommand))
+	]
 	public partial bool IsManualMode { get; set; }
 
 	[ObservableProperty, NotifyPropertyChangedFor(nameof(ElapsedTimeFormatted))]
@@ -153,10 +155,8 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		PlayCommand.NotifyCanExecuteChanged();
 	}
 
-	partial void OnBpmChanged(decimal value)
-	{
-		RefreshTotalDuration();
-	}
+	// ReSharper disable once UnusedParameterInPartialMethod
+	partial void OnBpmChanged(decimal value) => RefreshTotalDuration();
 
 	private void RefreshTotalDuration() =>
 		TotalDuration = TimeSpan.FromMilliseconds(
@@ -323,39 +323,6 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 
 	[RelayCommand]
 	private void ToggleManualMode() => IsManualMode = !IsManualMode;
-
-	[RelayCommand(CanExecute = nameof(CanPause))]
-	private async Task PauseAsync()
-	{
-		if (_cts is null)
-		{
-			return;
-		}
-
-		await _cts.CancelAsync().ConfigureAwait(true);
-		_elapsedBeforePause = ElapsedTime;
-		_elapsedTimer.Stop();
-		Status = PlaybackStatus.Paused;
-		StatusText = $"Paused · Beat {CurrentBeat} of {TotalBeats}";
-	}
-
-	[RelayCommand(CanExecute = nameof(CanStop))]
-	private async Task StopAsync()
-	{
-		if (_cts is null)
-		{
-			return;
-		}
-
-		await _cts.CancelAsync().ConfigureAwait(true);
-		_elapsedTimer.Stop();
-		ElapsedTime = TimeSpan.Zero;
-		_elapsedBeforePause = TimeSpan.Zero;
-		CurrentBeat = 0;
-		_manualBeatIndex = 0;
-		Status = PlaybackStatus.Idle;
-		StatusText = $"Ready · Beat 1 of {TotalBeats}";
-	}
 
 	~PlaybackViewModel() => Dispose();
 }
