@@ -6,6 +6,7 @@ using System.Windows.Input;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Notewright.Core;
 using Notewright.Core.Models;
 using Notewright.Core.Models.Tokens;
 using Notewright.Input;
@@ -18,7 +19,7 @@ namespace Notewright.UI.ViewModels;
 
 internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 {
-	private const string ManualReadyText = "Manual mode · Press hotkey to advance";
+	private const string ManualReadyText = "Manual mode - Press hotkey to advance";
 	private readonly Timer _elapsedTimer;
 	private readonly HotkeyCoordinator _hotkeys;
 	private readonly IKeyboardSimulator _simulator;
@@ -111,7 +112,9 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		Dispatcher.UIThread.Post(() =>
 		{
 			if (command.CanExecute(null))
+			{
 				command.Execute(null);
+			}
 		});
 	}
 
@@ -174,7 +177,9 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		Dispatcher.UIThread.Post(() =>
 		{
 			if (Status != PlaybackStatus.Playing)
+			{
 				return;
+			}
 
 			ElapsedTime = _elapsedBeforePause + (DateTime.UtcNow - _playbackStarted);
 			StatusText = $"Playing · Beat {CurrentBeat} of {TotalBeats}";
@@ -288,7 +293,9 @@ internal sealed partial class PlaybackViewModel : ObservableObject, IDisposable
 		ResetProgress();
 
 		if (IsManualMode)
+		{
 			StatusText = ManualReadyText;
+		}
 	}
 
 	private void OnTokenStarted(int index)

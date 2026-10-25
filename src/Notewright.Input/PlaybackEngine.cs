@@ -1,3 +1,4 @@
+using Notewright.Core;
 using Notewright.Core.Models;
 using Notewright.Core.Models.Tokens;
 
@@ -5,21 +6,23 @@ namespace Notewright.Input;
 
 public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 {
-	private const int RollDelay = 1;
-	private const double LegatoDelayFraction = 4;
-	private const double ShortDelayFraction = 2;
-	private const double MediumDelayFraction = 0.75;
-	private const double MillisecondsPerMinute = 60000;
-
-	public async Task PlayAsync(Sheet sheet, CancellationToken cancellationToken = default)
+	public async Task PlayAsync(
+		Sheet sheet,
+		Func<PlaybackConfig> getConfig,
+		int startIndex = 0,
+		Action<int>? onTokenStarted = null,
+		CancellationToken cancellationToken = default
+	)
 	{
 		ArgumentNullException.ThrowIfNull(sheet);
+		ArgumentNullException.ThrowIfNull(getConfig);
 
-		foreach (TokenBase token in sheet.Tokens)
+		for (int i = startIndex; i < sheet.Tokens.Count; i++)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
+			onTokenStarted?.Invoke(i);
 
-			await PlayTokenAsync(token, sheet.Config, false, cancellationToken)
+			await PlayTokenAsync(sheet.Tokens[i], getConfig(), false, cancellationToken)
 				.ConfigureAwait(true);
 		}
 	}
@@ -34,7 +37,7 @@ public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 		ArgumentNullException.ThrowIfNull(token);
 		ArgumentNullException.ThrowIfNull(config);
 
-		double msPerBeat = MillisecondsPerMinute / config.Bpm;
+		double msPerBeat = PlaybackTiming.MillisecondsPerMinute / config.Bpm;
 
 		switch (token)
 		{
@@ -67,7 +70,10 @@ public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 				foreach (NoteToken note in roll.Notes)
 				{
 					simulator.KeyPress(note);
-					await Task.Delay(TimeSpan.FromMilliseconds(RollDelay), cancellationToken)
+					await Task.Delay(
+							TimeSpan.FromMilliseconds(PlaybackTiming.RollDelayMs),
+							cancellationToken
+						)
 						.ConfigureAwait(true);
 				}
 
@@ -84,7 +90,9 @@ public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 				{
 					simulator.KeyPress(note);
 					await Task.Delay(
-							TimeSpan.FromMilliseconds(msPerBeat / LegatoDelayFraction),
+							TimeSpan.FromMilliseconds(
+								msPerBeat * PlaybackTiming.LegatoBeatFraction
+							),
 							cancellationToken
 						)
 						.ConfigureAwait(true);
@@ -111,8 +119,8 @@ public sealed class PlaybackEngine(IKeyboardSimulator simulator)
 		double ms = delay switch
 		{
 			DelayAfter.None => msPerBeat,
-			DelayAfter.Short => msPerBeat / ShortDelayFraction,
-			DelayAfter.Medium => msPerBeat * MediumDelayFraction,
+			DelayAfter.Short => msPerBeat * PlaybackTiming.ShortDelayBeats,
+			DelayAfter.Medium => msPerBeat * PlaybackTiming.MediumDelayBeats,
 			_ => msPerBeat,
 		};
 
