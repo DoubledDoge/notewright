@@ -21,12 +21,10 @@ internal sealed partial class HotkeyEditorViewModel(
 	public string Description { get; } = description;
 	public string ResetText => $"Reset to {DefaultKey}";
 
-	[ObservableProperty]
-	[NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+	[ObservableProperty, NotifyCanExecuteChangedFor(nameof(SaveCommand))]
 	public partial string Input { get; set; } = string.Empty;
 
-	[ObservableProperty]
-	[NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+	[ObservableProperty, NotifyCanExecuteChangedFor(nameof(SaveCommand))]
 	public partial bool HasConflict { get; set; }
 
 	[ObservableProperty]

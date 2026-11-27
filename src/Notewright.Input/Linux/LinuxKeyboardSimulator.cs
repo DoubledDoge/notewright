@@ -9,8 +9,7 @@ using Core.Models.Tokens;
 public sealed class LinuxKeyboardSimulator : IKeyboardSimulator
 {
 	private const string DotoolBinary = "dotool";
-	private readonly string _dotoolPath =
-		ResolveDotoolPath()
+	private readonly string _dotoolPath = ResolveDotoolPath()
 		?? throw new InvalidOperationException(
 			"dotool was not found. Ensure that dotool is installed and that the user has the appropriate uinput permissions. Refer to the Notewright README for installation instructions."
 		);
